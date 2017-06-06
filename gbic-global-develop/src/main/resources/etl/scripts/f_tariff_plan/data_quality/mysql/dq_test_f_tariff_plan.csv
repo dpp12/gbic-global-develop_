@@ -1,0 +1,5 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+11101,111,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+11102,111,G,2,"Validación de registros sin valores nulos para comprobar el tipo del campo",null_fields,ko,0,5,5
+11103,111,G,3,"Validación de lineas en F_TARIFF_PLAN no catalogadas en F_LINES",join_f_tariff_plan,ko,0,2,2
+11104,111,G,4,"Validación de que la primary key es unica",count_pk,ko,0,1,0

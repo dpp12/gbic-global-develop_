@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+112,1,handset_upgrade,"","Cambios de terminal por mes (Canjes), IMEI y MSISDN (Contrato y Prepago)",gbic_global_handset_upgrade

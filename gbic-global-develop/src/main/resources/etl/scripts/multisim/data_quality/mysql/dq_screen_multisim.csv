@@ -1,0 +1,8 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+12601,126,1,l,NULL,"# Duplicados en PK (country_id,month_id,msisdn_main,msisdn_add)"
+12602,126,1,g,null_fields,"# Registros con algun valor NULL"
+12603,126,2,g,msisdn_id_length,"# Registros por longitud de msisdn_main"
+12604,126,3,g,msisdn_id_length,"# Registros por longitud de msisdn_add"
+12605,126,4,g,join_customer,"# Registros de M_LINES con MULTISIM (msisdn_main) not in M_LINES"
+12606,126,5,g,join_segments,"# Registros de M_LINES con MULTISIM (msisdn_add) not in M_LINES"
+12607,126,6,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, MSISDN_MAIN, MSISDN_ADD)"

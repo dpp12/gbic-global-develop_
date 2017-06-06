@@ -1,0 +1,11 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+11701,117,L,1,"Validacion de tests locales",NULL,NULL,NULL,0,0
+11702,117,G,2,"Validacion de registros sin valores nulos",null_fields,ko,0,2,0
+11703,117,G,3,"Validacion de que msisdn_id venga anonimizado",msisdn_id_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0
+11704,117,G,4,"Validacion de que subscription_id venga anonimizado",subscription_id_length,"1:2,2:44,3:44,5:2,201:32,9:44,8:44",0,0,0
+11705,117,G,5,"Validacion del formato fecha de service_active_dt",service_active_dt_format,ko,0,0,0
+11706,117,G,6,"Validacion del formato fecha de activation_dt",activation_dt_format,ko,0,0,0
+11707,117,G,7,"Validacion de id_service cruce con dim_m_services",join_dim_m_services,ko,0,2,0
+11708,117,G,8,"Validacion de group_sva cruce con dim_m_group_sva",join_dim_m_group_sva,ko,0,2,0
+11709,117,G,9,"Validacion de subscription_id cruce con m_lines",join_m_lines,ko,0,2,0
+11710,117,G,10,"Validación de que la primary key es unica",count_pk,ko,0,1,0

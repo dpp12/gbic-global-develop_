@@ -1,0 +1,9 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+11301,113,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+11302,113,G,2,"Validación de registros sin valores nulos",null_fields,ko,0,2,0
+11303,113,G,3,"Validación de que segment_cd cruce con segments",join_segments,ko,0,2,0
+11304,113,G,4,"Validación de que subscription_id venga anonimizado",subscription_id_length,"1:2,2:44,3:44,5:2,201:32,9:44,8:44",0,0,0
+11305,113,G,5,"Validación de que msisdn_id venga anonimizado",msisdn_id_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0
+11306,113,G,6,"Validación de que tariff_plan_id cruce con dim_m_tariff_plan",join_dim_m_tariff_plan,ko,0,2,0
+11307,113,G,7,"Validación de que postal_cd cruce con dim_postal",join_dim_postal,ko,0,2,0
+11308,113,G,8,"Validación de que la primary key es unica",count_pk,ko,0,1,0

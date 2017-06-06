@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+115,1,m_lines,"","Todas las líneas de Contrato y Prepago (incluyendo las líneas adicionales de los clientes con multisim) por mes y cliente (situación parque activo a último día del mes). Datos de trafico por ciclo de facturación",gbic_global_m_lines

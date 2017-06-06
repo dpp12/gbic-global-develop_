@@ -1,0 +1,8 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+11401,114,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+11402,114,G,2,"Validación de registros sin valores nulos para comprobar el tipo del campo",null_fields,ko,0,2,0
+11403,114,G,3,"Validación de que msisdn_id venga anonimizado",msisdn_id_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0
+11404,114,G,4,"Validación de registros con customers no registrados",join_customers,ko,0,2,0
+11405,114,G,5,"Validación del formato de fecha birth_dt",activation_dt_ok,ko,0,0,0
+11406,114,G,6,"Validación de billing_cycle_id cruce con dim_m_billing_cycle",join_billing,ko,0,2,0
+11407,114,G,7,"Validación de que la primary key es unica",count_pk,ko,0,1,0

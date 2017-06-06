@@ -1,0 +1,90 @@
+###################################################################################################
+# Service setup deployment
+###################################################################################################
+# bugfixing
+- name: Create setup/bugfixing
+  file:
+    path="{{ remote.service }}/setup/bugfixing"
+    state=directory
+    mode=0770
+
+- name: SETUP Deploy setup/bugfixing scripts
+  template:
+    src="{{ item }}"
+    dest="{{ remote.service }}/setup/bugfixing/"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/setup/bugfixing/*.sh"
+
+# hive
+- name: Create setup/hive
+  file:
+    path="{{ remote.service }}/setup/hive"
+    state=directory
+    mode=0770
+
+- name: SETUP Deploy setup/hive scripts
+  template:
+    src="{{ item }}"
+    dest="{{ remote.service }}/setup/hive/"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/setup/hive/*.hql"
+
+- name: Refresh auxiliary tables for base layer in hive
+  shell: "hive -f {{ remote.service }}/setup/hive/hive_creation.hql"
+
+- name: Refresh data_quality tables in hive
+  shell: "hive -f {{ remote.service }}/setup/hive/hive_creation_dq.hql"
+
+# mysql
+# mysql std_model -------------------------------------------------------------
+- name: Create MYSQL std_model script path
+  file:
+    path={{ remote.service }}/setup/mysql/std_model
+    state=directory
+    mode=0770
+
+- name: Deploy MYSQL std_model script
+  template:
+    src={{ item }}
+    dest={{ remote.service }}/setup/mysql/std_model
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/setup/mysql/std_model/*"
+
+- name: Refresh mysql_std_model in mysql
+  shell: "mysql -h {{ db.host }} -u {{ db.user }} -p{{ db.pass }} -P{{ db.port }} --local_infile=1 < {{ remote.service }}/setup/mysql/std_model/mysql_std_model.sql"
+
+# mysql data_quality ----------------------------------------------------------
+- name: Deploy MYSQL setup mysql data_quality scripts
+  template:
+    src={{ item }}
+    dest={{ remote.service }}/setup/mysql/data_quality
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/setup/mysql/data_quality/*"
+
+# mysql_dq_creation script won't be automatically executed
+# mysql_dq_load script won't either be executed
+# dq_interfaces_data_loading.sql shall be executed BEFORE the deployment of ETL:
+- name: Refresh mysql_data_quality_setup in mysql
+  shell: "mysql -h {{ db.host }} -u {{ db.user }} -p{{ db.pass }} -P{{ db.port }} --local_infile=1 < {{ remote.service }}/setup/mysql/data_quality/dq_interfaces_data_loading.sql"
+
+# historic pre-requirements per OB (files generation and ingestion) ----------------------------
+- name: Create setup pre-requirements per OB path
+  file:
+    path="{{ remote.service }}/setup/prereqs"
+    state=directory
+    mode=0770
+
+- name: Deploy setup pre-requirements per OB scripts
+  template:
+    src={{ item }}
+    dest="{{ remote.service }}/setup/prereqs/"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/setup/prereqs/*"
+
+- name: Launching historic pre-requirements per OB. Generating and ingesting interfaces in HDFS
+  debug: "msg='Historic generation and ingestion of files required for the ETLs is not executed. In order to execute the historic pre-requirements for all the countries (from the start date 20150101 until today), please execute: {{ remote.service }}/setup/prereqs/prereqs-loading.sh {{ project.version_num }} \"{{ project.generation.obs }}\" 201501 201605 {{ remote.genfileoutbox }} >> {{ remote.service }}/setup/prereqs/prereqs-loading.log 2>&1'"

@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+101,1,customer,"","Todos los clientes convergentes, fijos, postpago y prepago por mes. Incluye parque activo y lineas no activas con movimientos durante el mes",gbic_global_customer

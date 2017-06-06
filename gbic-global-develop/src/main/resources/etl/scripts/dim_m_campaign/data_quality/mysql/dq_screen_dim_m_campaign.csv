@@ -1,0 +1,4 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+12201,122,1,l,NULL,"# Registros"
+12202,122,1,g,null_fields,"# Registros con algun valor NULL"
+12203,122,2,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, CAMPAIGN_ID)"

@@ -1,0 +1,29 @@
+###################################################################################################
+# CONFIG deployment
+###################################################################################################
+- name: Create service CONFIG deployment path in remote server
+  file:
+    path={{ remote.service }}/config
+    state=directory
+    mode=0770
+
+- name: Deploy CONFIG files in remote server
+  template:
+    src={{ item }}
+    dest={{ remote.service }}/config
+    mode=0660
+  with_fileglob: "{{ local.resources }}/deploy/envs/{{ deployment.environment }}/templates/*.xml"
+
+# Deploy to HDFS
+- name: Clean up service CONFIG from HDFS
+  shell: hdfs dfs -rm -f -r {{ cluster.service }}/config
+  ignore_errors: yes
+
+- name: Create service CONFIG's deployment path in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -mkdir -p {{ cluster.service }}/config
+
+- name: Deploy CONFIG file in HDFS hive-site.xml
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/config/hive-site.xml {{ cluster.service }}/config
+
+- name: Deploy CONFIG file in HDFS hive-oozie-site.xml
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/config/hive-oozie-site.xml {{ cluster.service }}/config

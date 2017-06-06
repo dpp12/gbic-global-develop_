@@ -1,0 +1,5 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+10801,108,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+10802,108,G,2,"Validación de registros sin valores nulos",null_fields,ko,0,2,0
+10803,108,G,3,"Validación de dim_postal cruce con homogenization files",join_homog_files,ko,0,2,0
+10804,108,G,4,"Validación de que la primary key es unica",count_pk,ko,0,1,0

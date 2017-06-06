@@ -1,0 +1,75 @@
+###################################################################################################
+# Export deployment
+###################################################################################################
+# oozie
+- name: Create EXPORT oozie config path
+  file:
+    path={{ remote.service }}/export/oozie/config
+    state=directory
+    mode=0770
+
+- name: Deploy EXPORT oozie config files
+  template: 
+    src={{ item }}
+    dest={{ remote.service }}/export/oozie/config
+    mode=0660
+  with_fileglob:
+    - "{{ local.resources }}/export/oozie/config/coordinator-*.properties"
+
+- name: Deploy EXPORT oozie files
+  template:
+    src={{ item }}
+    dest={{ remote.service }}/export/oozie
+    mode=0660
+  with_fileglob:
+    - "{{ local.resources }}/export/oozie/*.xml"
+
+# scripts
+- name: Create EXPORT scripts path
+  file:
+    path={{ remote.service }}/export/scripts
+    state=directory
+    mode=0770
+
+- name: Deploy EXPORT scripts
+  template:
+    src={{ item }} 
+    dest={{ remote.service }}/export/scripts
+    mode=0660
+  with_fileglob:
+    - "{{ local.resources }}/export/scripts/*.hql"
+
+##################################### >> Put them all to HDFS #####################################
+
+- name: Clean up service EXPORT configuration from HDFS
+  shell: hdfs dfs -rm -r {{ cluster.service }}/export
+  ignore_errors: yes
+
+- name: Create EXPORT's deployment path in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -mkdir -p {{ cluster.service }}/export
+
+# oozie
+- name: Create EXPORT oozie lib's deployment path in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -mkdir -p {{ cluster.service }}/export/oozie/lib
+
+- name: Deploy EXPORT oozie files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/export/oozie/*.xml {{ cluster.service }}/export/oozie
+
+- name: Deploy EXPORT export/oozie/lib/hive-site files in Hadoop Cluster
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/config/hive-oozie-site.xml {{ cluster.service }}/export/oozie/lib
+
+- name: Deploy EXPORT runtime dependencies to HDFS if present, don't abort if fails
+  shell: "hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/target/dependency/*.jar {{ cluster.service }}/export/oozie/lib"
+  register: dependency2exporthdfs
+  ignore_errors: yes
+
+- name: Deploy EXPORT Show message if DEPENDENCIES could not be deployed
+  debug: msg="WARNING! Project dependencies (i.e. MySQL connector) couldn't be deployed to HDFS. If they are NOT already deployed, please do it manually before executing coordinators"
+  when: 'dependency2exporthdfs.rc != 0'
+
+# scripts
+- name: Create EXPORT scripts deployment path in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -mkdir -p {{ cluster.service }}/export/scripts/{{ project.version }}
+
+- name: Deploy EXPORT scripts files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/export/scripts/*.hql {{ cluster.service }}/export/scripts/{{ project.version }}

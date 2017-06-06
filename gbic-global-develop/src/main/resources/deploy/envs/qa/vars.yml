@@ -1,0 +1,38 @@
+# Gplatform Global deployment for qa environment properties
+oozie:
+  url: "http://10.101.195.20:11000/oozie"
+
+hadoop:
+  cluster:
+    namenode:   "hdfs://qafsha"
+    jobtracker: "10.101.195.21:8050"
+    krbenabled: false
+
+hive:
+  thrift:       "thrift://euhsuf0041vxmpp.serv.dc.tg.telefonica:9083"
+  krbprincipal: "hive/_HOST@EXAMPLE.COM"
+
+db:
+  host:         "10.101.195.20"
+  port:         3306
+  schema_homog: "{{ project.prefix }}gbic_global_homog"
+  schema:       "{{ project.prefix }}gbic_global_bnss"
+  schema_dq:    "{{ project.prefix }}gbic_data_quality"
+  user:         "indust_master"
+  pass:         "Temp.2015"
+
+nodes:
+  client:
+    inbox: "/sftp"
+
+slack:
+  alarms:
+    ingest:         "https://hooks.slack.com/services/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"
+    genfile:        "https://hooks.slack.com/services/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"
+    workflow:       "https://hooks.slack.com/services/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"
+    export:         "https://hooks.slack.com/services/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"
+
+proxy:
+  required: true
+  http:  "http://10.93.0.169:8080"
+  https: "https://10.93.0.169:8080"

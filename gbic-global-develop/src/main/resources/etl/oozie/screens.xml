@@ -1,0 +1,77 @@
+<workflow-app xmlns='uri:oozie:workflow:0.5' name='{{ project.prefix }}gbic-${area}-${service}-etl-${ob3}-swf-${fileName}-${screenType}-screen-${counter}'>
+    <parameters>
+        <property>
+            <name>counter</name>
+        </property>
+    </parameters>
+    <global>
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+    </global>
+    
+{% if hadoop.cluster.krbenabled %}
+{%     set creds=' cred="gbic-cred"' %}
+    <credentials>
+        <credential name="gbic-cred" type="hcat">
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${hive_thrift}</value>
+            </property>
+            <property>
+                <name>hcat.metastore.principal</name>
+                <value>${hive_krbprincipal}</value>
+            </property>
+        </credential>
+    </credentials>
+    
+{% else %}
+{%     set creds="" %}
+{% endif %}
+    <start to="check_exit_condition"/>
+    
+    <decision name="check_exit_condition">
+        <switch>
+            <case to="run_screen">
+                ${gbic:existsScreenFile(scripts_path, version, fileName, execution, screenType, counter)}
+            </case>
+            <default to="end" />
+        </switch>
+    </decision>
+    
+    <action name="run_screen"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>${config_path}/hive-site.xml</job-xml>
+            <script>${gbic:getScreenFilePath(scripts_path, version, fileName, execution, screenType, counter)}</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>ob=${ob3}</param>
+            <param>gbic_op_id=${gbic_op_id}</param>
+            <param>fileName=${fileName}</param>
+            <param>screenType=${gbic:toUpperCase(screenType)}</param>
+            <param>screenCounter=${counter}</param>
+        </hive>
+        <ok to="loop" />
+        <error to="fail" />
+    </action>
+    
+    <action name="loop">
+        <sub-workflow>
+            <app-path>${workflow_path}/screens.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>counter</name>
+                    <value>${counter + 1}</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="end"/>
+        <error to="fail" />
+    </action>
+    
+    <kill name="fail">
+        <message>Map/Reduce failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end' />
+</workflow-app>

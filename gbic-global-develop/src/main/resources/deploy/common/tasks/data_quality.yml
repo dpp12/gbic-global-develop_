@@ -1,0 +1,38 @@
+###################################################################################################
+# Each Interface's DQ files
+###################################################################################################
+## With Ansible 2.0, this can be used, including in etl.yml:
+## - include: data_quality.yml
+##   with_items: project.interfaces
+## And then, in this file, set fact interface={{item}} for the outer loop item
+#- set_fact: interface="{{ item }}"
+##
+## Meanwhile (Ansible 1.9) a set fact + include statements are needed for each interface.
+## - set_fact: interface="customer"
+## - include: data_quality.yml
+## - set_fact: interface="daily_traffic"
+## - include: data_quality.yml
+## ...
+- name: Create local placeholder for Interface's DQ Configuration data
+  file: path={{ remote.service }}/etl/scripts/{{ interface }}/data_quality state=directory mode=0770
+
+- name: Deploy CSV for MySQL with Interface's DQ configuration
+  copy: src={{ local.resources }}/etl/scripts/{{ interface }}/data_quality/mysql dest={{ remote.service }}/etl/scripts/{{ interface }}/data_quality mode=0770
+
+- name: Create local placeholder for Interface's DQ Screens
+  file: path={{ remote.service }}/etl/scripts/{{ interface }}/data_quality/pre/screens state=directory mode=0770
+
+- name: Deploy locally Interface's DQ Screens
+  template: src={{ item }} dest={{ remote.service }}/etl/scripts/{{ interface }}/data_quality/pre/screens/. mode=0660
+  with_fileglob: "{{ local.resources }}/etl/scripts/{{ interface }}/data_quality/pre/screens/*.hql"
+
+- name: Create local placeholder for Interface's DQ Tests
+  file: path={{ remote.service }}/etl/scripts/{{ interface }}/data_quality/pre/tests state=directory mode=0770
+
+- name: Deploy locally Interface's DQ Tests
+  template: src={{ item }} dest={{ remote.service }}/etl/scripts/{{ interface }}/data_quality/pre/tests/. mode=0660
+  with_fileglob: "{{ local.resources }}/etl/scripts/{{ interface }}/data_quality/pre/tests/*.hql"
+
+- name: Deploy locally Interface's DQ Hive model SETUP and TEARDOWN
+  template: src={{ item }} dest={{ remote.service }}/etl/scripts/{{ interface }}/data_quality/. mode=0660
+  with_fileglob: "{{ local.resources }}/etl/scripts/{{ interface }}/data_quality/{{ interface }}HiveDQ*.hql"

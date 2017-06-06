@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+105,1,dim_m_group_sva,"","Asociada por GROUP_SVA con M_LINE_SERVICES",gbic_global_dim_m_group_sva

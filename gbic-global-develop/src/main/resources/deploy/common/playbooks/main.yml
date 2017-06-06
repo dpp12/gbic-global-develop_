@@ -1,0 +1,37 @@
+- name: Deploy GPLATFORM Global config files
+  hosts: client
+  remote_user: "{{ remoteuser }}"
+  vars_files:
+    - ../vars/main.yml
+    - ../../envs/{{ deployenv }}/vars.yml
+
+  vars:
+    local:
+      resources: "{{ project.home }}/src/main/resources"
+      target: "{{ project.home }}/target"
+      java: "{{ project.home }}/src/main/java"
+    remote:
+      service: "{{ node.client.home }}/services/{{ project.area }}/{{ project.service}}"
+      instance: "{{ node.client.home }}/services/{{ project.area }}/{{ project.service}}-{{ deployment.timestamp }}"
+      genfileoutbox: "{{ node.client.genfileoutbox }}"
+      inbox: "{{ node.client.inbox }}"
+    cluster:
+      common:  "{{ hdfs.home }}/common"
+      service: "{{ hdfs.custhome }}/services/{{ project.area }}/{{ project.service }}"
+
+  tasks:
+    - include: ../tasks/1st_of_all.yml
+    - include: ../tasks/artifacts.yml
+    - include: ../tasks/common.yml
+    - include: ../tasks/config.yml
+    - include: ../tasks/cron.yml
+    - include: ../tasks/datamarts.yml
+    - include: ../tasks/etl.yml
+    - include: ../tasks/export.yml
+    - include: ../tasks/generation.yml
+    - include: ../tasks/hue.yml
+    - include: ../tasks/ingestion.yml
+    - include: ../tasks/java.yml
+    - include: ../tasks/setup.yml
+    - include: ../tasks/workflow.yml
+    - include: ../tasks/oozie.yml

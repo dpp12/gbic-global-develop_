@@ -1,0 +1,31 @@
+###################################################################################################
+# WORKFLOW deployment
+###################################################################################################
+- name: Create WORKFLOW dir
+  file:
+    path="{{ remote.service }}/workflow/resources"
+    state=directory
+    mode=0770
+
+- name: WORKFLOW Deploy scripts
+  copy:
+    src="{{ item }}"
+    dest="{{ remote.service }}/workflow"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/workflow/*.sh"
+
+- name: WORKFLOW Deploy scripts resource files
+  template:
+    src="{{ item }}"
+    dest="{{ remote.service }}/workflow/resources"
+    mode=0660
+  with_fileglob:
+    - "{{ local.resources }}/workflow/resources/*"
+
+- name: Clean up WORKFLOW files from HDFS
+  shell: hdfs dfs -rm -f -r {{ cluster.service }}/workflow
+  ignore_errors: yes
+
+- name: Put WORKFLOW files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/workflow {{ cluster.service }}

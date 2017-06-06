@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+116,1,movements,"","Todos los movimientos de alta y baja por mes y MSISDN (incluyendo las líneas adicionales de los clientes con multisim)",gbic_global_movements

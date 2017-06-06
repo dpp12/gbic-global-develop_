@@ -1,0 +1,14 @@
+###################################################################################################
+# Generation of interfaces deployment
+###################################################################################################
+- name: Deploy generation files
+  copy:
+    src={{ local.resources }}/generation/templates
+    dest={{ remote.service }}/generation
+    mode=0770
+
+- name: Deploy genfile.sh script
+  template:
+    src={{ local.resources }}/generation/genfile.sh
+    dest={{ remote.service }}/generation
+    mode=0770

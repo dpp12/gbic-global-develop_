@@ -1,0 +1,19 @@
+gbic_op_id,country_name,country_iso2,country_iso3,country_number,country_prefix
+1,Spain,ES,ESP,724,34
+2,Argentina,AR,ARG,32,54
+3,Chile,CL,CHL,152,56
+4,Uruguay,UY,URY,858,598
+5,Perú,PE,PER,604,51
+6,Ecuador,EC,ECU,218,593
+7,Venezuela,VE,VEN,862,58
+8,Colombia,CO,COL,170,57
+9,México,MX,MEX,484,52
+10,Guatemala,GT,GTM,320,502
+11,Panamá,PA,PAN,591,507
+12,El Salvador,SV,SLV,222,503
+13,Costa Rica,CR,CRI,188,506
+14,Nicaragua,NI,NIC,558,505
+101,Great Britain,GB,GBR,826,44
+102,Germany,DE,DEU,276,49
+103,Ireland,IE,IRL,372,353
+201,Brazil,BR,BRA,76,55

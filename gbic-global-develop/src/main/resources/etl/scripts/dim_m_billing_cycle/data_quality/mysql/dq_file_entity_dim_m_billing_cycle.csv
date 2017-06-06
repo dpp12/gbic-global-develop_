@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+121,1,dim_m_billing_cycle,"","Asociada por BILLING_CYCLE_ID con M_LINES, INVOICE, TRAFFIC_DATA, TRAFFIC_SMS, TRAFFIC_VOICE",gbic_global_dim_m_billing_cycle

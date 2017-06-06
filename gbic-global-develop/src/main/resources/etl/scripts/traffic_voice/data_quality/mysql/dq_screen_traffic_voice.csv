@@ -1,0 +1,10 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+12001,120,1,l,NULL,"# Registros"
+12002,120,2,l,NULL,"# msisdn_id"
+12003,120,3,l,NULL,"# msisdn_id < 10000000"
+12004,120,4,l,NULL,"# Duplicados en PK (gbic_op_id,month,billing_cycle_id,subscription_id,msisdn_id,day_cd,time_range_cd,imei_num,billing_cycle_dt)"
+12005,120,1,g,null_fields,"# Registros con algun valor NULL"
+12006,120,2,g,msisdn_id_length,"# Registros por longitud de msisdn_id"
+12007,120,3,g,join_dim_billing_cycle,"# Registros de TRAFFIC_VOICE con BILLING_CYCLE_ID not in DIM_M_BILLING_CYCLE"
+12008,120,4,g,join_m_lines,"# Registros de TRAFFIC_VOICE con MSISDN_ID not in M_LINES"
+12009,120,5,g,count_pk,"# Duplicados en PK (BILLING_CYCLE_ID, SUBSCRIPTION_ID, MSISDN_ID, DAY_CD, TIME_RANGE_CD, IMEI_NUM, BILLING_CYCLE_DT)"

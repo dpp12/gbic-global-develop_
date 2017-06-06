@@ -1,0 +1,7 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+10201,102,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+10202,102,G,2,"Validación de registros sin valores nulos",null_fields,ko,0,2,0
+10203,102,G,3,"Validación de que el msisdn_id viene siempre anonimizado",msisdn_id_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0
+10204,102,G,4,"Validación del formato de day_type_cd",day_type_format,ko,0,0,0
+10205,102,G,5,"Validación del formato de fecha call_dt",call_dt_ok,ko,0,0,0
+10206,102,G,6,"Validación de que la primary key es unica",count_pk,ko,0,1,0

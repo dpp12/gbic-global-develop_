@@ -1,0 +1,5 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+10901,109,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+10902,109,G,2,"Validación de registros sin valores nulos para comprobar el tipo del campo",null_fields,ko,0,2,0
+10903,109,G,3,"Validación de registros con customers no registrados",join_customers,ko,0,2,0
+10904,109,G,4,"Validación de que la primary key es unica",count_pk,ko,0,1,0

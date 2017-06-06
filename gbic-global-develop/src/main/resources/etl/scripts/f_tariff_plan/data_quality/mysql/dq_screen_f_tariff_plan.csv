@@ -1,0 +1,4 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+11101,111,1,g,null_fields,"# Registros con algun valor NULL"
+11102,111,2,g,join_f_tariff_plan,"# Registros de F_TARIFF_PLAN con SUBSCRIPTION_ID not in F_LINES"
+11103,111,3,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, SUBSCRIPTION_ID, TARIFF_PLAN_ID)"

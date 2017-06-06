@@ -1,0 +1,58 @@
+# GPLATFORM Global deployment common properties
+project:
+  area: gplatform
+  service: global
+  prefix: "{{ prefix }}"
+  obs: ['arg','bra','chl','esp','per','mex','ven']
+  version: MSv5
+  version_num: 5
+  # Interfaces with ETL process
+  # @deprecated services_line is deprecated. Use m_line_services instead.
+  base_tables: ['customer','daily_traffic','dim_f_tariff_plan','dim_f_voice_type','dim_m_tariff_plan','dim_postal','f_access','f_lines','f_tariff_plan','imei_sales','invoice','m_line_services','m_lines','movements','multisim','services_line','traffic_data','traffic_sms','traffic_voice']
+  # @deprecated services_line is deprecated. Use m_line_services instead.
+  interfaces: ['customer','daily_traffic','dim_f_tariff_plan','dim_f_voice_type','dim_m_billing_cycle','dim_m_campaign','dim_m_group_sva','dim_m_services','dim_m_movement','dim_m_operators','dim_m_tariff_plan','dim_postal','f_access','f_lines','f_tariff_plan','imei_sales','invoice','m_line_services','m_lines','movements','multisim','services_line','traffic_data','traffic_sms','traffic_voice']
+  home: "{{ projecthome }}"
+  # In order to add a new country for the generation of files, add the new country in:
+  #  * This script, obs and interfaces (with the list of the files to be generated)
+  # In order to add a new country for both the generation and ingestion of files, add the new country in:
+  #  * gbic-gplatform-common.sh, in the different constants and functions
+  #  * Associated README.md file in prereqs
+  generation:
+    obs: "ES BR AR CL PE"
+    interfaces:
+    - { ob: 'ES', interfaces: '\"DIM_M_GROUP_SVA DIM_M_BILLING_CYCLE\"' }
+    - { ob: 'BR', interfaces: '\"DIM_M_CAMPAIGN DIM_M_BILLING_CYCLE\"' }
+    - { ob: 'AR', interfaces: '\"DIM_M_CAMPAIGN DIM_M_MOVEMENT\"' }
+    - { ob: 'CL', interfaces: '\"DIM_M_CAMPAIGN DIM_M_OPERATORS DIM_M_MOVEMENT DIM_M_BILLING_CYCLE\"' }
+    - { ob: 'PE', interfaces: '\"DIM_M_MOVEMENT DIM_M_BILLING_CYCLE\"' }
+
+hdfs:
+  umask:     "007"
+  home:                    "/user/gbic"
+  custhome:  "{{ hdfsbase }}/user/gbic"
+  filetests: "{{ hdfsbase }}/user/{{ project.area }}/file_test"
+  screenres: "{{ hdfsbase }}/user/{{ project.area }}/screen_results"
+  testres:   "{{ hdfsbase }}/user/{{ project.area }}/test_results"
+  # In order to use "real" data, hdfsbase preffix must be ommitted before deploying
+  # for input folders: inbox (data) and service_checks (metadata)
+  inbox:     "{{ hdfsbase }}/user/{{ project.area }}/inbox"
+  srvchecks: "{{ hdfsbase }}/user/{{ project.area }}/service_checks"
+  tacs:      "{{ hdfsbase }}/user/gbic/common/tacs"
+
+node:
+  client:
+    home: "{{ clientbase }}/opt/gbic"
+    genfileoutbox: "{{ clientbase }}{{ nodes.client.inbox }}"
+    # In order to use "real" input data, clientbase preffix must be ommited before deploying
+    # for input folder: local inbox
+    inbox: "{{ clientbase }}{{ nodes.client.inbox }}"
+
+etloozie:
+  initialdate: "{{ initialdate }}"
+  startdate: "{{ startdate }}"
+  enddate: "{{ enddate }}"
+  action: "{{ oozieaction }}"
+
+deployment:
+  timestamp: "{{ timestamp }}"
+  environment: "{{ deployenv }}"

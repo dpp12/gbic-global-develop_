@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+111,1,f_tariff_plan,"","Relación de todas las tarifas que tiene una línea, excepto la indicada en F_LINES",gbic_global_f_tariff_plan

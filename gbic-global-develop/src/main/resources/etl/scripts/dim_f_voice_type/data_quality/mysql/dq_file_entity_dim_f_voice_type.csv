@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+104,1,dim_f_voice_type,"","Asociada por VOICE_TYPE_CD con F_LINES",gbic_global_dim_f_voice_type

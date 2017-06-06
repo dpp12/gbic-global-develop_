@@ -1,0 +1,441 @@
+<workflow-app xmlns='uri:oozie:workflow:0.5' name='{{ project.prefix }}gbic-${area}-${service}-etl-${ob3}'>
+    <global>
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+        <configuration>
+            <property>
+                <name>mapred.job.queue.name</name>
+                <value>${queueName}</value>
+            </property>
+            <property>
+                <name>oozie.use.system.libpath</name>
+                <value>true</value>
+            </property>
+            <property>
+                <name>oozie.action.sharelib.for.pig</name>
+                <value>pig,hcatalog</value>
+            </property>
+        </configuration>
+    </global>
+    
+    <start to="mobile_fork" />
+    
+    <!-- MOBILE FORK -->
+    <fork name="mobile_fork">
+        <path start="load_customer" />
+        <path start="load_dim_m_billing_cycle" />
+        <path start="load_dim_m_campaign" />
+        <path start="load_dim_m_group_sva" />
+        <path start="load_dim_m_movement" />
+        <path start="load_dim_m_operators" />
+        <path start="load_dim_m_services" />
+        <path start="load_dim_m_tariff_plan" />
+        <path start="load_dim_postal" />
+        <path start="load_imei_sales" />
+        <path start="load_invoice" />
+        <path start="load_m_line_services" />
+        <path start="load_m_lines" />
+        <path start="load_movements" />
+        <path start="load_multisim" />
+        <!-- @deprecated services_line is deprecated. Use m_line_services instead. -->
+        <path start="load_services_line" />
+    </fork>
+    <join name="mobile_join" to="fix_fork" />
+    
+    <!-- FIX FORK -->
+    <fork name="fix_fork">
+        <path start="load_dim_f_tariff_plan" />
+        <path start="load_dim_f_voice_type" />
+        <path start="load_f_access" />
+        <path start="load_f_lines" />
+        <path start="load_f_tariff_plan" />
+    </fork>
+    <join name="fix_join" to="load_traffic_data" />
+    
+    <!-- TRAFFIC ACTIONS -->
+    <action name="load_traffic_data">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>traffic_data</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="load_traffic_sms"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_traffic_sms">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>traffic_sms</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="load_traffic_voice"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_traffic_voice">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>traffic_voice</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="load_daily_traffic"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_daily_traffic">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>daily_traffic</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    
+    <!-- MOBILE FORK ACTIONS -->
+    <action name="load_customer">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>customer</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_m_billing_cycle">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_m_billing_cycle</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_m_campaign">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_m_campaign</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_m_group_sva">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_m_group_sva</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_m_movement">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_m_movement</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_m_operators">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_m_operators</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_m_services">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_m_services</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_m_tariff_plan">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_m_tariff_plan</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_postal">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_postal</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_imei_sales">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>imei_sales</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_invoice">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>invoice</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_m_line_services">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>m_line_services</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_m_lines">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>m_lines</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_movements">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>movements</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_multisim">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>multisim</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <!-- @deprecated services_line is deprecated. Use m_line_services instead. -->
+    <action name="load_services_line">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>services_line</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="mobile_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <!-- FIX FORK ACTIONS -->
+    <action name="load_dim_f_tariff_plan">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_f_tariff_plan</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="fix_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_dim_f_voice_type">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>dim_f_voice_type</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="fix_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_f_access">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>f_access</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="fix_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_f_lines">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>f_lines</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="fix_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <action name="load_f_tariff_plan">
+        <sub-workflow>
+            <app-path>${workflow_path}/interface.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>fileName</name>
+                    <value>f_tariff_plan</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="fix_join"/>
+        <error to="fail"/>
+    </action>
+    
+    <kill name="fail">
+        <message>Map/Reduce failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    
+    <end name='end' />
+</workflow-app>

@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+124,1,dim_m_operators,"","Asociada por PORT_OP_CD con MOVEMENTS",gbic_global_dim_m_operators

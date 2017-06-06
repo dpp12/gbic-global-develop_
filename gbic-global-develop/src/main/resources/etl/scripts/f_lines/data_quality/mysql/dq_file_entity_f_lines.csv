@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+110,1,f_lines,"","Lineas fija por mes y cliente. Incluye parque activo",gbic_global_f_lines

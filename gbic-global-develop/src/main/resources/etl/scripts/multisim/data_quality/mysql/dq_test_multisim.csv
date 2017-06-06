@@ -1,0 +1,8 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+12601,126,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+12602,126,G,2,"Validación de registros sin valores nulos",null_fields,ko,0,2,0
+12603,126,G,3,"Validación de que msisdn_id venga anonimizado",msisdn_main_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0
+12604,126,G,4,"Validación de que msisdn_id venga anonimizado",msisdn_aad_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0
+12605,126,G,5,"Validación de msisdn_main cruce con M_LINES (msisdn_in)",join_m_lines,ko,0,2,0
+12606,126,G,6,"Validación de msisdn_add cruce con M_LINES (msisdn_in)",join_m_lines,ko,0,2,00
+12607,126,G,7,"Validación de que la primary key es unica",count_pk,ko,0,1,0

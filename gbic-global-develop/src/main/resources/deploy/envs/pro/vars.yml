@@ -1,0 +1,38 @@
+# Gplatform Global deployment for pro environment properties
+oozie:
+  url: "http://euhsuf0027fxmot.serv.dc.tg.telefonica:11000/oozie"
+
+hadoop:
+  cluster:
+    namenode:   "hdfs://ccdo"
+    jobtracker: "euhsuf0028fxmot.serv.dc.tg.telefonica:8050"
+    krbenabled: true
+
+hive:
+  thrift:       "thrift://euhsuf0027fxmot.serv.dc.tg.telefonica:9083"
+  krbprincipal: "hive/euhsuf0027fxmot.serv.dc.tg.telefonica@HDP.CDO"
+
+db:
+  host:         "10.93.27.247"
+  port:         3306
+  schema_homog: "{{ project.prefix }}gbic_global_homog"
+  schema:       "{{ project.prefix }}gbic_global_bnss"
+  schema_dq:    "{{ project.prefix }}gbic_data_quality"
+  user:         "indust_master"
+  pass:         "3lYF4K8l815a58eUb8CrO277n4k92xmz"
+
+nodes:
+  client:
+    inbox: "/sftp"
+
+slack:
+  alarms:
+    ingest:         "https://hooks.slack.com/services/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"
+    genfile:        "https://hooks.slack.com/services/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"
+    workflow:       "https://hooks.slack.com/services/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"
+    export:         "https://hooks.slack.com/services/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"
+
+proxy:
+  required: true
+  http:  "http://10.93.0.169:8080"
+  https: "https://10.93.0.169:8080"

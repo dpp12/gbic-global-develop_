@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+123,1,dim_m_movement,"","Asociada por MOVEMENT_ID con MOVEMENTS",gbic_global_dim_m_movement

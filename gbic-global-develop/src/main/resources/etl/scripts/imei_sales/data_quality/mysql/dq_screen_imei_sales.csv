@@ -1,0 +1,9 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+11301,113,1,l,NULL,"# registros"
+11302,113,1,g,null_fields,"# Registros con algun valor NULL"
+11303,113,2,g,join_segments,"# Registros que no cruzan con segments"
+11304,113,3,g,subscription_id_length,"# Registros por longitud de subscription_id"
+11305,113,4,g,msisdn_id_length,"# Registros por longitud de msisdn_id"
+11306,113,5,g,join_dim_m_tariff_plan,"# Registros de IMEI_SALES con TARIFF_PLAN_ID not in DIM_M_TARIFF_PLAN"
+11307,113,6,g,join_dim_postal,"# Registros de IMEI_SALES con POSTAL_CD not in DIM_POSTAL"
+11308,113,7,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, IMEI_NUM, SUBSCRIPTION_ID)"

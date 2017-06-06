@@ -1,0 +1,57 @@
+###################################################################################################
+# ETL oozie process
+###################################################################################################
+- name: Stop ETL oozie coordinator
+  # From oozie 4.2 this option will be available
+  #shell:  oozie jobs -kill -filter name='{{ project.prefix }gbic-{{ project.area }}-{{ project.service }}-etl-*'\;status=RUNNING -jobtype COORDINATOR
+  shell: "{{ remote.service }}/deploy/common/scripts/stopservice.sh {{ project.prefix }}gbic-{{ project.area }}-{{ project.service }}-etl-* {{ oozie.url }}"
+  when: '"{{ etloozie.action }}" != "none"'
+
+- name: Start ETL oozie arg coordinator
+  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/etl/oozie/config/coordinator-arg.properties -oozie={{ oozie.url }}" 
+  when: '"{{ etloozie.action }}" != "none"'
+
+- name: Start ETL oozie bra coordinator
+  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/etl/oozie/config/coordinator-bra.properties -oozie={{ oozie.url }}" 
+  when: '"{{ etloozie.action }}" != "none"'
+
+- name: Start ETL oozie chl coordinator
+  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/etl/oozie/config/coordinator-chl.properties -oozie={{ oozie.url }}" 
+  when: '"{{ etloozie.action }}" != "none"'
+
+- name: Start ETL oozie esp coordinator
+  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/etl/oozie/config/coordinator-esp.properties -oozie={{ oozie.url }}" 
+  when: '"{{ etloozie.action }}" != "none"'
+
+- name: Start ETL oozie per coordinator
+  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/etl/oozie/config/coordinator-per.properties -oozie={{ oozie.url }}" 
+  when: '"{{ etloozie.action }}" != "none"'
+
+####################################################################################################
+## EXPORT oozie process
+####################################################################################################
+#- name: Stop EXPORT oozie coordinator
+#  # From oozie 4.2 this option will be available
+#  #shell:  oozie jobs -kill -filter name='{{ project.prefix }}gbic-{{ project.area }}-{{ project.service }}-export-*'\;status=RUNNING -jobtype COORDINATOR
+#  shell: "{{ remote.service }}/deploy/common/scripts/stopservice.sh {{ project.prefix }}gbic-{{ project.area }}-{{ project.service }}-export-* {{ oozie.url }}"
+#  when: '"{{ etloozie.action }}" != "none"'
+#
+#- name: Start EXPORT oozie arg coordinator
+#  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/export/oozie/config/coordinator-arg.properties -oozie={{ oozie.url }}"
+#  when: '"{{ etloozie.action }}" != "none"'
+#
+#- name: Start EXPORT oozie bra coordinator
+#  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/export/oozie/config/coordinator-bra.properties -oozie={{ oozie.url }}"
+#  when: '"{{ etloozie.action }}" != "none"'
+#
+#- name: Start EXPORT oozie chl coordinator
+#  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/export/oozie/config/coordinator-chl.properties -oozie={{ oozie.url }}"
+#  when: '"{{ etloozie.action }}" != "none"'
+#
+#- name: Start EXPORT oozie esp coordinator
+#  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/export/oozie/config/coordinator-esp.properties -oozie={{ oozie.url }}"
+#  when: '"{{ etloozie.action }}" != "none"'
+#
+#- name: Start EXPORT oozie per coordinator
+#  shell: "oozie job -{{ etloozie.action }} -config {{ remote.service }}/export/oozie/config/coordinator-per.properties -oozie={{ oozie.url }}"
+#  when: '"{{ etloozie.action }}" != "none"'

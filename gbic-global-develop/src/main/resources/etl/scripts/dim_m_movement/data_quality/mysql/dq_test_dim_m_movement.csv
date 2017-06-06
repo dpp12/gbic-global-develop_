@@ -1,0 +1,4 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+12301,123,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+12302,123,G,2,"Validación de registros sin valores nulos",null_fields,ko,0,2,0
+12303,123,G,3,"Validación de que la primary key es unica",count_pk,ko,0,1,0

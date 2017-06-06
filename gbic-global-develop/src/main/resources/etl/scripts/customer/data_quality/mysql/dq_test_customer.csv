@@ -1,0 +1,7 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+10101,101,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+10102,101,G,2,"Validación de registros sin valores nulos",null_fields,ko,0,2,0
+10103,101,G,3,"Validación de que customer cruce con segments",join_segments,ko,0,2,0
+10104,101,G,4,"Validación del formato de fecha birth_dt",birth_dt_ok,ko,0,0,0
+10105,101,G,5,"Validación de que el party_identification_num viene siempre anonimizado para segmento consumer",party_id_num_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0.5,0
+10106,101,G,6,"Validación de que la primary key es unica",count_pk,ko,0,1,0

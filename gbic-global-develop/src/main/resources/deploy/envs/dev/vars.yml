@@ -1,0 +1,38 @@
+# Gplatform Global deployment for dev environment properties
+oozie:
+  url: "http://prod-epg-hdpnn-02:11000/oozie"
+
+hadoop:
+  cluster:
+    namenode:   "hdfs://hadoopdev"
+    jobtracker: "prod-epg-hdpnn-01.hi.inet:8050"
+    krbenabled: true
+
+hive:
+  thrift:       "thrift://prod-epg-hdpnn-02.hi.inet:9083"
+  krbprincipal: "hive/_HOST@HADOOP.INET"
+
+db:
+  host:         "dev-gbic-mysql-01"
+  port:         3306
+  schema_homog: "{{ project.prefix }}gbic_global_homog"
+  schema:       "{{ project.prefix }}gbic_global_bnss"
+  schema_dq:    "{{ project.prefix }}gbic_data_quality"
+  user:         "javierb"
+  pass:         "74s7p1eJrl"
+
+nodes:
+  client:
+    inbox: "/mnt/nfs/horizonte/hadoop_tmp_storage"
+
+slack:
+  alarms:
+    ingest:         "https://hooks.slack.com/services/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"
+    genfile:        "https://hooks.slack.com/services/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"
+    workflow:       "https://hooks.slack.com/services/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"
+    export:         "https://hooks.slack.com/services/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"
+
+proxy:
+  required: false
+  http:  ""
+  https: ""

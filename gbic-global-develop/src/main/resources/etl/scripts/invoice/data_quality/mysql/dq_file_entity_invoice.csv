@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+114,1,invoice,"","Facturación y consumo de recargas de todas las líneas de Contrato, Hibrido y Prepago por mes y MSISDN",gbic_global_invoice

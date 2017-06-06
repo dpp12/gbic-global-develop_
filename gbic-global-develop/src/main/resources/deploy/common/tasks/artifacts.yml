@@ -1,0 +1,22 @@
+###################################################################################################
+# ARTIFACTS deployment
+###################################################################################################
+- name: ARTIFACTS destination folders creation
+  file:
+    path={{ remote.service }}/target/dependency
+    state=directory
+    mode=0770
+
+- name: ARTIFACTS Deployment
+  copy:
+    src={{ item }}
+    dest={{ remote.service }}/target/.
+    mode=0660
+  with_fileglob: "{{ local.target }}/*.jar"
+
+- name: ARTIFACTS Dependencies Deployment
+  copy:
+    src={{ item }}
+    dest={{ remote.service }}/target/dependency/.
+    mode=0660
+  with_fileglob: "{{ local.target }}/dependency/*.jar"

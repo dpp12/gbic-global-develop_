@@ -1,0 +1,188 @@
+###################################################################################################
+# ETL deployment
+###################################################################################################
+# auxdata
+- name: Deploy ETL auxdata
+  copy:
+    src={{ local.resources }}/etl/auxdata
+    dest={{ remote.service }}/etl
+    mode=0770
+
+# oozie
+- name: Create ETL oozie config path
+  file:
+    path={{ remote.service }}/etl/oozie/config
+    state=directory
+    mode=0770
+
+- name: Deploy ETL oozie config files
+  template:
+    src={{ item }}
+    dest={{ remote.service }}/etl/oozie/config
+    mode=0660
+  with_fileglob:
+    - "{{ local.resources }}/etl/oozie/config/coordinator-*.properties"
+
+- name: Deploy ETL oozie files
+  template:
+    src={{ item }}
+    dest={{ remote.service }}/etl/oozie
+    mode=0660
+  with_fileglob:
+    - "{{ local.resources }}/etl/oozie/*.xml"
+
+# scripts
+# scripts/{interface}/data_quality
+## Deprecated include + with_items from 1.6 to 2.0
+#- include: data_quality.yml
+#  with_items: project.interfaces
+- set_fact: interface="customer"
+- include: data_quality.yml
+- set_fact: interface="daily_traffic"
+- include: data_quality.yml
+- set_fact: interface="dim_f_tariff_plan"
+- include: data_quality.yml
+- set_fact: interface="dim_f_voice_type"
+- include: data_quality.yml
+- set_fact: interface="dim_m_billing_cycle"
+- include: data_quality.yml
+- set_fact: interface="dim_m_campaign"
+- include: data_quality.yml
+- set_fact: interface="dim_m_group_sva"
+- include: data_quality.yml
+- set_fact: interface="dim_m_movement"
+- include: data_quality.yml
+- set_fact: interface="dim_m_operators"
+- include: data_quality.yml
+- set_fact: interface="dim_m_services"
+- include: data_quality.yml
+- set_fact: interface="dim_m_tariff_plan"
+- include: data_quality.yml
+- set_fact: interface="dim_postal"
+- include: data_quality.yml
+- set_fact: interface="f_access"
+- include: data_quality.yml
+- set_fact: interface="f_lines"
+- include: data_quality.yml
+- set_fact: interface="f_tariff_plan"
+- include: data_quality.yml
+- set_fact: interface="imei_sales"
+- include: data_quality.yml
+- set_fact: interface="invoice"
+- include: data_quality.yml
+- set_fact: interface="m_line_services"
+- include: data_quality.yml
+- set_fact: interface="m_lines"
+- include: data_quality.yml
+- set_fact: interface="movements"
+- include: data_quality.yml
+- set_fact: interface="multisim"
+- include: data_quality.yml
+# @deprecated services_line is deprecated. Use m_line_services instead.
+- set_fact: interface="services_line"
+- include: data_quality.yml
+- set_fact: interface="traffic_data"
+- include: data_quality.yml
+- set_fact: interface="traffic_sms"
+- include: data_quality.yml
+- set_fact: interface="traffic_voice"
+- include: data_quality.yml
+
+## scripts/{interface}
+- name: Deploy ETL scripts
+  template:
+    src={{ local.resources }}/etl/scripts/{{ item }}/{{ item }}.pig
+    dest={{ remote.service }}/etl/scripts/{{ item }}
+    mode=0660
+  with_items: project.base_tables
+
+- name: Deploy locally Interface's Hive table CREATION for each interface
+  template:
+    src={{ local.resources }}/etl/scripts/{{ item }}/{{ item }}HiveCreation.hql
+    dest={{ remote.service }}/etl/scripts/{{ item }}/.
+    mode=0660
+  with_items: project.base_tables
+
+- name: Deploy locally Interface's Hive table PROMOTION for each interface
+  template:
+    src={{ local.resources }}/etl/scripts/tableHivePromotion.hql
+    dest={{ remote.service }}/etl/scripts/{{ item }}/{{ item }}HivePromotion.hql
+    mode=0660
+  with_items: project.base_tables
+
+# scripts/
+- name: Deploy ETL gbic_global_tacs.pig script
+  template:
+    src={{ local.resources }}/etl/scripts/gbic_global_tacs.pig
+    dest={{ remote.service }}/etl/scripts
+    mode=0660
+
+- name: Deploy ETL std_dim_download.sh script
+  template:
+    src={{ local.resources }}/etl/scripts/std_dim_download.sh
+    dest={{ remote.service }}/etl/scripts
+    mode=0770
+
+# prereqs/
+- name: Create pre-requirements per OB path
+  file:
+    path="{{ remote.service }}/etl/prereqs"
+    state=directory
+    mode=0770
+
+- name: Deploy pre-requirements per OB file
+  template:
+    src={{ item }}
+    dest="{{ remote.service }}/etl/prereqs/"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/etl/prereqs/*.sh"
+
+##################################### >> Put them all to HDFS #####################################
+
+- name: Clean up service ETL configuration from HDFS
+  shell: hdfs dfs -rm -r {{ cluster.service }}/etl
+  ignore_errors: yes
+
+- name: Create ETL's deployment path in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -mkdir -p {{ cluster.service }}/etl
+
+# auxdata
+- name: Deploy ETL auxdata files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/etl/auxdata {{ cluster.service }}/etl
+
+# oozie
+- name: Create ETL oozie lib's deployment path in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -mkdir -p {{ cluster.service }}/etl/oozie/lib
+
+- name: Deploy ETL oozie files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/etl/oozie/*.xml {{ cluster.service }}/etl/oozie
+
+- name: Deploy ETL artifacts to HDFS if present, don't abort if fails
+  shell: "hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/target/*.jar {{ cluster.service }}/etl/oozie/lib"
+  register: jar2hdfs
+  ignore_errors: yes
+
+- name: Deploy ETL artifacts Show message if JAR could not be deployed
+  debug: msg="WARNING! Project artifact couldn't be deployed to HDFS. If it is NOT already deployed, please do it manually before executing coordinators"
+  when: 'jar2hdfs.rc != 0'
+
+- name: Deploy ETL runtime dependencies to HDFS if present, don't abort if fails
+  shell: "hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/target/dependency/*.jar {{ cluster.service }}/etl/oozie/lib"
+  register: dependency2hdfs
+  ignore_errors: yes
+
+- name: Deploy ETL Show message if DEPENDENCIES could not be deployed
+  debug: msg="WARNING! Project dependencies (i.e. MySQL connector) couldn't be deployed to HDFS. If they are NOT already deployed, please do it manually before executing coordinators"
+  when: 'dependency2hdfs.rc != 0'
+
+# scripts
+- name: Create ETL scripts deployment path in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -mkdir -p {{ cluster.service }}/etl/scripts/{{ project.version }}
+
+- name: Deploy ETL scripts files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/etl/scripts/{{ item }} {{ cluster.service }}/etl/scripts/{{ project.version }}
+  with_items: project.interfaces
+
+- name: Deploy ETL scripts gbic_global_tacs.pig in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/etl/scripts/gbic_global_tacs.pig {{ cluster.service }}/etl/scripts/{{ project.version }}

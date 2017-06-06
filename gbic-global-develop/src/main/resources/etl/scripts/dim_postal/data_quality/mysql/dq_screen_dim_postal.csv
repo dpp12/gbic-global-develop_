@@ -1,0 +1,6 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+10801,108,1,l,NULL,"# Registros"
+10802,108,2,l,NULL,"# Duplicados en PK (GBIC_OP_ID, MONTH, POSTAL_ID, LOCATION_LEVEL)"
+10803,108,1,g,null_fields,"# Registros con algun valor NULL"
+10804,108,2,g,join_homog_files,"# Registros de DIM_POSTAL con LOCATION_LEVEL not in HOMOGENIZATION files"
+10805,108,3,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, POSTAL_ID, LOCATION_LEVEL)"

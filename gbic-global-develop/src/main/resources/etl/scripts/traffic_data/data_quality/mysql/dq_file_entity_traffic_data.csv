@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+118,1,traffic_data,"","Todos los IMEIS por mes y MSISDN (incluyendo líneas adicionales de los clientes con servicio multisim). Un IMEI puede ser usado por varios MSISDN y viceversa. Se incluirán las bajas del mes",gbic_global_traffic_data

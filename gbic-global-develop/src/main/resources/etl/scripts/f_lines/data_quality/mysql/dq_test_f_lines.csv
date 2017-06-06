@@ -1,0 +1,11 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+11001,110,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+11002,110,G,2,"Validación de registros sin valores nulos para comprobar el tipo del campo",null_fields,ko,0,2,0
+11003,110,G,3,"Validación de registros con segmento no catalogado",join_segment_cd,ko,0,2,0
+11004,110,G,4,"Validación de registros con dim_postal no catalogado",join_dim_postal,ko,0,2,0
+11005,110,G,5,"Validación de registros con join_dim_f_tariff_plan_voice no catalogado",join_dim_f_tariff_plan,ko,0,2,0
+11006,110,G,6,"Validación de registros con join_dim_f_tariff_plan_bband no catalogado",join_bband_tariff_plan_id,ko,0,2,0
+11007,110,G,7,"Validación de registros con tv_tariff_plan_id no catalogado",join_dim_f_tariff_plan_tv,ko,0,2,0
+11008,110,G,8,"Validación de registros con customers no registrados",join_customers,ko,0,2,0
+11009,110,G,9,"Validación de registros que no cumple la condicion total_month_rv-(voice_month_rv+tv_month_rv+bband_month_rv)",join_revenues,ko,0,2,0
+11010,110,G,10,"Validación de que la primary key es unica",count_pk,ko,0,1,0

@@ -1,0 +1,82 @@
+###################################################################################################
+# General Setup for Deployment
+###################################################################################################
+- stat: path="{{ remote.service }}" 
+  register: sym
+
+- name: 1ST_OF_ALL Delete installation folder link
+  file:
+    path="{{ remote.service }}"
+    state=absent
+  when: sym.stat.islnk is defined and sym.stat.islnk == true
+
+- name: 1ST_OF_ALL Create base installation folder
+  file:
+    path="{{ remote.instance }}"
+    state=directory
+    mode=0770
+
+- name: 1ST_OF_ALL Create installation folder link
+  file:
+    src="{{ remote.instance }}"
+    dest="{{ remote.service }}"
+    state=link
+
+
+# hive - Deploy scripts -------------------------------------------------------
+- name: 1ST_OF_ALL Create setup/hive path
+  file:
+    path="{{ remote.service }}/setup/hive"
+    state=directory
+    mode=0770
+
+
+# mysql - Deploy scripts ------------------------------------------------------
+# > data_quality
+- name: 1ST_OF_ALL Create setup/mysql/data_quality path
+  file:
+    path={{ remote.service }}/setup/mysql/data_quality
+    state=directory
+    mode=0770
+
+- name: 1ST_OF_ALL Deploy MYSQL setup mysql data_quality data files (general projects, countries)
+  copy:
+    src="{{ local.resources }}/setup/mysql/data_quality/data"
+    dest={{ remote.service }}/setup/mysql/data_quality
+    mode=0660
+
+- name: 1ST_OF_ALL Deploy MYSQL mysql_dq_creation.sql script
+  template:
+    src={{ local.resources }}/setup/mysql/data_quality/mysql_dq_creation.sql
+    dest={{ remote.service }}/setup/mysql/data_quality
+    mode=0770
+
+- name: 1ST_OF_ALL Deploy MYSQL mysql_dq_load.sql script
+  template:
+    src={{ local.resources }}/setup/mysql/data_quality/mysql_dq_load.sql
+    dest={{ remote.service }}/setup/mysql/data_quality
+    mode=0770
+
+# mysql creation & load scripts won't be automatically executed - Check if they exist and abort if not
+# mysql - Check existence of MySQL databases
+- name: 1ST_OF_ALL Check existence of MySQL databases
+  shell: "mysql -h {{ db.host }} -u {{ db.user }} -p{{ db.pass }} -P{{ db.port }} -e 'SHOW DATABASES' | egrep '(^{{ db.schema_dq }}$)' | cat"
+  register: showdatabases
+
+- name: 1ST_OF_ALL Abort if any MySQL Database is not present
+  fail: msg="Some MySQL Databases could not be found. Expected {{ db.schema_dq }}. Found {{ showdatabases.stdout_lines }}. Maybe you have to execute => mysql -h {{ db.host }} -u {{ db.user }} -p{{ db.pass }} -P{{ db.port }} < {{ remote.service }}/setup/mysql/data_quality/{SCRIPT}.sql for all scripts, and then redeploy again."
+  when: 'showdatabases.stdout.split() | count != 1'
+
+
+# deploy ----------------------------------------------------------------------
+- name: 1ST_OF_ALL Create path for deployment files
+  file:
+    path="{{ remote.service }}/deploy"
+    state=directory
+    mode=0770
+
+- name: 1ST_OF_ALL Deploy deployment files and scripts
+  copy:
+    src={{ local.resources }}/deploy/
+    dest={{ remote.service }}/deploy
+    mode=0770

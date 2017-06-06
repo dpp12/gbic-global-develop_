@@ -1,0 +1,170 @@
+<coordinator-app name="{{ project.prefix }}gbic-${area}-${service}-export-${ob}" frequency="${coord:months(1)}"
+    start="${start_date}" end="${end_date}" timezone="UTC"
+    xmlns="uri:oozie:coordinator:0.4">
+    <parameters>
+        <property>
+            <name>delayMonth</name>
+            <value>-1</value>
+        </property>
+        <property>
+            <name>dims_customers</name>
+            <value>0</value>
+        </property>
+        <property>
+            <name>dims_f_tariffs</name>
+            <value>0</value>
+        </property>
+        <property>
+            <name>dims_geo_zones</name>
+            <value>0</value>
+        </property>
+        <property>
+            <name>dims_tacs</name>
+            <value>0</value>
+        </property>
+        <property>
+            <name>dims_m_tariffs</name>
+            <value>0</value>
+        </property>
+        <property>
+            <name>kpis_mobile</name>
+            <value>0</value>
+        </property>
+        <property>
+            <name>kpis_fix</name>
+            <value>0</value>
+        </property>
+    </parameters>
+    <controls>
+        <concurrency>1</concurrency>
+    </controls>
+    
+    <action>
+        <workflow>
+            <app-path>${workflow_path}</app-path>
+            <configuration>
+                <property>
+                    <name>nameNode</name>
+                    <value>${nameNode}</value>
+                </property>
+                <property>
+                    <name>jobTracker</name>
+                    <value>${jobTracker}</value>
+                </property>
+                <property>
+                    <name>workflow_path</name>
+                    <value>${workflow_path}</value>
+                </property>
+                <property>
+                    <name>nominalTime</name>
+                    <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(),
+                       delayMonth, 'MONTH'), 'yyyy-MM-dd')}</value>
+                </property>
+                
+                <!-- Area assigned to the project. In this case 'gplatform' -->
+                <property>
+                    <name>area</name>
+                    <value>${area}</value>
+                </property>
+                
+                <!-- Service assigned to the project. In this case 'global' -->
+                <property>
+                    <name>service</name>
+                    <value>${service}</value>
+                </property>
+                
+                <!-- Path of the scripts for screens, tests and ETLs -->
+                <property>
+                    <name>scripts_path</name>
+                    <value>${scripts_path}</value>
+                </property>
+                
+                <!-- Path of the hive-site configuration file -->
+                <property>
+                    <name>config_path</name>
+                    <value>${config_path}</value>
+                </property>
+                
+                {% if hadoop.cluster.krbenabled %}
+                <!-- Thrift uri -->
+                <property>
+                    <name>hive_thrift</name>
+                    <value>${hive_thrift}</value>
+                </property>
+                
+                <!-- Kerberos principal -->
+                <property>
+                    <name>hive_krbprincipal</name>
+                    <value>${hive_krbprincipal}</value>
+                </property>
+                
+                {% endif %}
+                <!-- Country identifier -->
+                <property>
+                    <name>ob</name>
+                    <value>${ob}</value>
+                </property>
+                
+                <!-- Country identifier -->
+                <property>
+                    <name>gbic_op_id</name>
+                    <value>${gbic_op_id}</value>
+                </property>
+                
+                <!-- Interface version implemented by the country -->
+                <property>
+                    <name>version</name>
+                    <value>${version}</value>
+                </property>
+                
+                <!-- Exportation queries flags -->
+                <property>
+                    <name>dims_customers</name>
+                    <value>${dims_customers}</value>
+                </property>
+                <property>
+                    <name>dims_f_tariffs</name>
+                    <value>${dims_f_tariffs}</value>
+                </property>
+                <property>
+                    <name>dims_geo_zones</name>
+                    <value>${dims_geo_zones}</value>
+                </property>
+                <property>
+                    <name>dims_tacs</name>
+                    <value>${dims_tacs}</value>
+                </property>
+                <property>
+                    <name>dims_m_tariffs</name>
+                    <value>${dims_m_tariffs}</value>
+                </property>
+                <property>
+                    <name>kpis_mobile</name>
+                    <value>${kpis_mobile}</value>
+                </property>
+                <property>
+                    <name>kpis_fix</name>
+                    <value>${kpis_fix}</value>
+                </property>
+                <property>
+                    <name>month</name>
+                    <value>${coord:formatTime(coord:dateOffset(coord:dateOffset(coord:nominalTime(), 0, 'MONTH'),-1,'DAY'),'yyyy-MM-dd')}</value>
+                </property>
+                
+                <!-- MySQL exportation credentials -->
+                <property>
+                    <name>mysql_user</name>
+                    <value>${mysql_user}</value>
+                </property>
+                <property>
+                    <name>mysql_pass</name>
+                    <value>${mysql_pass}</value>
+                </property>
+                <property>
+                    <name>mysql_url</name>
+                    <value>${mysql_url}</value>
+                </property>
+            </configuration>
+        </workflow>
+    </action>
+</coordinator-app>

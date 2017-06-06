@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+117,1,services_line,"","Todos los servicios  por mes y MSISDN (Contrato y Prepago). Situación a último día del mes",gbic_global_services_line

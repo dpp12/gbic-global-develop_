@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+109,1,f_access,"","Nº de accesos por cliente y servicio. Inicialmente solo España.",gbic_global_f_access

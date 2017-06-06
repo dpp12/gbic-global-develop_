@@ -1,0 +1,23 @@
+###################################################################################################
+# Service datamarts deployment
+###################################################################################################
+# hive
+- name: Create datamarts/pricing path
+  file:
+    path="{{ remote.service }}/datamarts/pricing"
+    state=directory
+    mode=0770
+
+- name: Deploy build_dm_pricing.sh script
+  template:
+    src={{ local.resources }}/datamarts/pricing/build_dm_pricing.sh
+    dest={{ remote.service }}/datamarts/pricing
+    mode=0770
+
+- name: Deploy datamarts/*.sql scripts
+  template:
+    src="{{ item }}"
+    dest="{{ remote.service }}/datamarts/pricing"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/datamarts/pricing/*.sql"

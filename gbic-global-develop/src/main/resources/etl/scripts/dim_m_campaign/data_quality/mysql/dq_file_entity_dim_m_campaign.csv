@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+122,1,dim_m_campaign,"","Asociada por CAMPAIGN_ID con MOVEMENTS, IMEI_SALES",gbic_global_dim_m_campaign

@@ -1,0 +1,8 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+10201,102,1,l,NULL,"# Registros"
+10202,102,2,l,NULL,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, CALL_DT, MSISDN_ID, IMEI_NUM, ROAMING_CD, SUBSCRIPTION_ID)"
+10203,102,1,g,null_fields,"# Registros con algun valor NULL"
+10204,102,2,g,msisdn_id_length,"# Registros por longitud de msisdn_id"
+10205,102,3,g,day_type_format,"# Registros con day_type_cd no válido: not in ('Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su')"
+10206,102,4,g,call_dt_ok,"# Registros con formato de fecha call_dt mal formateados"
+10207,102,5,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, CALL_DT, MSISDN_ID, IMEI_NUM, ROAMING_CD, SUBSCRIPTION_ID)"

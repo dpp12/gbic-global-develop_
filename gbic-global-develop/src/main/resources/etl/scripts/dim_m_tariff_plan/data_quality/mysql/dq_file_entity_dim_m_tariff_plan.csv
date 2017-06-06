@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+107,1,dim_m_tariff_plan,"","Descripción y clasificación del Plan de Tarificación. Asociada por TARIFF_PLAN_ID con M_LINES, IMEI_SALES, MOVEMENTS y con PREV_TARIFF_PLAN_ID de MOVEMENTS",gbic_global_dim_m_tariff_plan

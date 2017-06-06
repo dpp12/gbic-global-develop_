@@ -1,0 +1,222 @@
+<coordinator-app name="{{ project.prefix }}gbic-${area}-${service}-etl-${ob3}" frequency="${coord:months(1)}"
+    start="${start_date}" end="${end_date}" timezone="UTC"
+    xmlns="uri:oozie:coordinator:0.4">
+    <parameters>
+        <property>
+            <name>delayMonth</name>
+            <value>-1</value>
+        </property>
+    </parameters>
+    <controls>
+        <concurrency>1</concurrency>
+    </controls>
+    
+    <action>
+        <workflow>
+            <app-path>${workflow_path}</app-path>
+            <configuration>
+                <property>
+                    <name>nameNode</name>
+                    <value>${nameNode}</value>
+                </property>
+                <property>
+                    <name>jobTracker</name>
+                    <value>${jobTracker}</value>
+                </property>
+                <property>
+                    <name>workflow_path</name>
+                    <value>${workflow_path}</value>
+                </property>
+                <property>
+                    <name>nominalTime</name>
+                    <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(),
+                       delayMonth, 'MONTH'), 'yyyy-MM-dd')}</value>
+                </property>
+                 <property>
+                    <name>month</name>
+                    <value>${coord:formatTime(coord:dateOffset(coord:nominalTime(),
+                       delayMonth, 'MONTH'), 'yyyyMM')}</value>
+                </property>
+                
+                <!-- Area assigned to the project. In this case 'gplatform' -->
+                <property>
+                    <name>area</name>
+                    <value>${area}</value>
+                </property>
+                
+                <!-- Service assigned to the project. In this case 'global' -->
+                <property>
+                    <name>service</name>
+                    <value>${service}</value>
+                </property>
+                
+                <!-- Path of the scripts for screens, tests and ETLs -->
+                <property>
+                    <name>scripts_path</name>
+                    <value>${scripts_path}</value>
+                </property>
+                
+                <!-- Path of the hive-site configuration file -->
+                <property>
+                    <name>config_path</name>
+                    <value>${config_path}</value>
+                </property>
+                
+                {% if hadoop.cluster.krbenabled %}
+                <!-- Thrift uri -->
+                <property>
+                    <name>hive_thrift</name>
+                    <value>${hive_thrift}</value>
+                </property>
+                
+                <!-- Kerberos principal -->
+                <property>
+                    <name>hive_krbprincipal</name>
+                    <value>${hive_krbprincipal}</value>
+                </property>
+                
+                {% endif %}
+                <!-- Country upper-case iso2 -->
+                <property>
+                    <name>OB2</name>
+                    <value>${OB2}</value>
+                </property>
+                
+                <!-- Country lower-case iso3 -->
+                <property>
+                    <name>ob3</name>
+                    <value>${ob3}</value>
+                </property>
+                
+                <!-- Country identifier -->
+                <property>
+                    <name>gbic_op_id</name>
+                    <value>${gbic_op_id}</value>
+                </property>
+                
+                <!-- Interface version implemented by the country -->
+                <property>
+                    <name>version</name>
+                    <value>${version}</value>
+                </property>
+                
+                <!-- Flag to skip data quality execution -->
+                <property>
+                    <name>skip_dq</name>
+                    <value>${skip_dq != "" ? skip_dq : 0}</value>
+                </property>
+                
+                <!-- Flag to skip local screens execution -->
+                <property>
+                    <name>skip_local</name>
+                    <value>${skip_local != "" ? skip_local : 0}</value>
+                </property>
+                
+                <!-- Flag to skip global screens execution -->
+                <property>
+                    <name>skip_global</name>
+                    <value>${skip_global != "" ? skip_global : 0}</value>
+                </property>
+                
+                <!-- Flag to enable automatic promotion of data from staging to Gold zone -->
+                <property>
+                    <name>auto_promote</name>
+                    <value>${auto_promote != "" ? auto_promote : 0}</value>
+                </property>
+                
+                <!-- Files processing flags -->
+                <property>
+                    <name>customer</name>
+                    <value>${customer}</value>
+                </property>
+                <property>
+                    <name>daily_traffic</name>
+                    <value>${daily_traffic}</value>
+                </property>
+                <property>
+                    <name>dim_f_tariff_plan</name>
+                    <value>${dim_f_tariff_plan}</value>
+                </property>
+                <property>
+                    <name>dim_f_voice_type</name>
+                    <value>${dim_f_voice_type}</value>
+                </property>
+                <property>
+                    <name>dim_m_tariff_plan</name>
+                    <value>${dim_m_tariff_plan}</value>
+                </property>
+                <property>
+                    <name>dim_postal</name>
+                    <value>${dim_postal}</value>
+                </property>
+                <property>
+                    <name>f_access</name>
+                    <value>${f_access}</value>
+                </property>
+                <property>
+                    <name>f_lines</name>
+                    <value>${f_lines}</value>
+                </property>
+                <property>
+                    <name>f_tariff_plan</name>
+                    <value>${f_tariff_plan}</value>
+                </property>
+                 <property>
+                    <name>imei_sales</name>
+                    <value>${imei_sales}</value>
+                </property>
+                <property>
+                    <name>invoice</name>
+                    <value>${invoice}</value>
+                </property>
+                <property>
+                    <name>m_line_services</name>
+                    <value>${m_line_services}</value>
+                </property>
+                <property>
+                    <name>m_lines</name>
+                    <value>${m_lines}</value>
+                </property>
+                <property>
+                    <name>movements</name>
+                    <value>${movements}</value>
+                </property>
+                <property>
+                    <name>multisim</name>
+                    <value>${multisim}</value>
+                </property>
+                <!-- @deprecated services_line is deprecated. Use m_line_services instead. -->
+                <property>
+                    <name>services_line</name>
+                    <value>${services_line}</value>
+                </property>
+                <property>
+                    <name>traffic_data</name>
+                    <value>${traffic_data}</value>
+                </property>
+                <property>
+                    <name>traffic_sms</name>
+                    <value>${traffic_sms}</value>
+                </property>
+                <property>
+                    <name>traffic_voice</name>
+                    <value>${traffic_voice}</value>
+                </property>
+                
+                <!-- MySQL exportation credentials -->
+                <property>
+                    <name>mysql_user</name>
+                    <value>${mysql_user}</value>
+                </property>
+                <property>
+                    <name>mysql_pass</name>
+                    <value>${mysql_pass}</value>
+                </property>
+                <property>
+                    <name>mysql_url</name>
+                    <value>${mysql_url}</value>
+                </property>
+            </configuration>
+        </workflow>
+    </action>
+</coordinator-app>

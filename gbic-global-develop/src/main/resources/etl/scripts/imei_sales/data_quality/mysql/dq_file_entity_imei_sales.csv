@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+113,1,imei_sales,"","Ventas de los terminales por mes, IMEI, y MSISDN si tiene línea asociada. Incluir todos los terminales, aunque no tengan línea",gbic_global_imei_sales

@@ -1,0 +1,287 @@
+#!/usr/bin/env bash
+# 
+# generate-qa-reports
+# -------------------
+# 
+# Generates the QA reports for the semantic model interfaces.
+# 
+# Usage: (as admin) ** Execute script with --help for details on usage.
+# 
+# # /opt/gbic/services/gplatform/global/qa/generate-qa-reports [OPTION] {vers-num} {country} {file} [{yyyyMM}]
+# 
+# Example:
+# 
+# # /opt/gbic/services/gplatform/global/qa/generate-qa-reports -i -s'01 03 04 05' 5 ES M_LINES 201501
+# 
+###################################################################################################
+
+
+# FUNCTIONS AND CONSTANTS FOR SERVICE CONFIGURATION
+###################################################################################################
+showHelp () {
+  echo -e "Usage: $0 [OPTION] MS_VERSION COUNTRY INTERFACE [MONTH]"
+  echo -e "Generates QA reports for the specified file\n"
+  echo -e "\t-i, --ingest"
+  echo -e "\t               execute ingestion script for specified file."
+  echo -e "\t               It won't be executed by default."
+  echo -e "\t-r, --realod-tables"
+  echo -e "\t               reload QA temporary tables."
+  echo -e "\t               It won't be executed by default, except when -i is present."
+  echo -e "\t-s SCRIPT-ID-LIST, --script-ids=SCRIPT-ID-LIST"
+  echo -e "\t               space separated list of script-ids to be executed."
+  echo -e "\t               If not specified, all scripts will be launched."
+  echo -e "\t    --help     display this help and exit"
+  echo -e "\nRecognized COUNTRY format:"
+  echo -e "\tTwo character country code according to ISO 3166-1 alpha-2 standard"
+  echo -e "\nRecognized MONTH format:"
+  echo -e "\tYYYYMM"
+}
+
+GBIC_HOME=`readlink -e $0`
+GBIC_HOME=`dirname ${GBIC_HOME}`
+GBIC_HOME=`cd "${GBIC_HOME}/.."; pwd`
+
+source ${GBIC_HOME}/common/gbic-gplatform-common.sh
+source ${GBIC_HOME}/common/gbic-gplatform-env.sh
+
+INGESTION_SCRIPT=${GBIC_HOME}/ingestion/ingest-files.sh
+LOCATION_OF_RAW_FILES={{ remote.inbox }}
+
+LOAD_SCRIPT_PATH=hive
+LOAD_SCRIPT_PREFFIX=load_qa_
+LOAD_SCRIPT_SUFFIX=.hql
+
+QA_SCRIPTS_PREFFIX=qa_rpt_
+QA_SCRIPTS_SUFFIX=.hql
+
+ALARM_URL="https://hooks.slack.com/services/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"
+
+# Finalizes script with an error code and an alarm. It receives two arguments:
+# - ERROR_CODE: numeric code of the error for ending the script
+# - ERROR_MESSAGE: descriptive text of the error that caused the finalization of script
+# Example:
+#   die 27 "There is not connection to server"
+die () {
+  __die "${ALARM_URL}" \
+        ":bug:"        \
+        "$1"           \
+        "$2"           \
+        "QA script for ${OB_2M}_${INTERFACE}_${CONTENT_DATE}"
+}
+
+
+# OPTIONS: -i, -r, -s SCRIPT-ID-LIST
+###################################################################################################
+OPT_INGEST=0
+OPT_SCRIPT_IDS=
+OPT_RELOAD=0
+
+while getopts '\-:ir-s:' opt; do
+  case ${opt} in
+    - )
+      long_optarg="${OPTARG#*=}"
+      case "${OPTARG}" in
+        ingest         ) OPT_INGEST=1;;
+        ingest*        ) cancel "option doesn't allow an argument -- ${OPTARG}";;
+        reload-tables  ) OPT_RELOAD=1;;
+        reload-tables* ) cancel "option doesn't allow an argument -- ${OPTARG}";;
+        script-ids=?*  ) OPT_SCRIPT_IDS=${long_optarg};;
+        script-ids*    ) cancel "option requires an argument -- ${OPTARG}";;
+        help           ) help;;
+        # "--" terminates argument processing
+        ''             ) break;;
+        *              ) cancel "illegal option -- ${OPTARG}";;
+      esac
+      ;;
+    i ) OPT_INGEST=1;;
+    r ) OPT_RELOAD=1;;
+    s ) OPT_SCRIPT_IDS=${OPTARG};;
+    \?) cancel;;
+  esac
+done
+shift $((--OPTIND))
+
+# ARGS: MS_VERSION, OBS_2M, MONTHLY_FILE, CONTENT_DATE (optional) Format yyyyMM
+###################################################################################################
+# Validate MS_VERSION
+# -------------------------------------------------------------------------------------------------
+MS_VERSION=$1
+if [[ "${MS_VERSION}" == "" ]]; then
+  cancel "wrong Semantic Model Version of file to be checked: NOT RECEIVED"
+fi
+# -------------------------------------------------------------------------------------------------
+# Validate OB
+# -------------------------------------------------------------------------------------------------
+OB_2M=$2
+validateOB ${OB_2M}; validOB=$?
+if [[ "${OB_2M}" == "" ]]; then
+  cancel "wrong Country Code of file to be checked: NOT RECEIVED"
+elif [[ "$validOB" = "0" ]]; then
+  cancel "wrong Country Code of file to be checked: '${OB_2M}' NOT AVAILABLE. Please, choose one of the following: { ${DEFAULT_OBS_2M//[ ]/, } }."
+fi
+# -------------------------------------------------------------------------------------------------
+# Validate INTERFACE
+# -------------------------------------------------------------------------------------------------
+INTERFACE=$3
+if [[ "${INTERFACE}" == "" ]]; then
+  cancel "wrong Interface Name of file to be checked: NOT RECEIVED"
+fi
+# -------------------------------------------------------------------------------------------------
+# Validate MONTH
+# -------------------------------------------------------------------------------------------------
+MONTH=$4
+if [[ "${MONTH}" == "" ]]; then
+  LOAD_DATE=`date '+%Y%m'`
+  CONTENT_DATE=$(date "--date=${LOAD_DATE}01 -1 month" +"%Y%m")
+else
+  CONTENT_DATE=${MONTH}
+fi
+
+
+# INITIALIZATION
+###################################################################################################
+EXEC_TIME=`date '+%F %H:%M:%S'`
+
+OB_3m=$(getOB_3m ${OB_2M})
+OB_3M=$(getOB_3M ${OB_2M})
+OP_ID=$(getOpId  ${OB_2M})
+
+CONTENT_YEAR=${CONTENT_DATE:0:4}
+CONTENT_MONTH=${CONTENT_DATE:4:2}
+
+LOAD_SCRIPT_NAME=${LOAD_SCRIPT_PREFFIX}${INTERFACE}${LOAD_SCRIPT_SUFFIX}
+LOAD_SCRIPT=${LOAD_SCRIPT_PATH}/${LOAD_SCRIPT_NAME}
+
+QA_SCRIPTS_NAME=${QA_SCRIPTS_PREFFIX}${INTERFACE}
+QA_SCRIPTS_PATH=${LOAD_SCRIPT_PATH}/${QA_SCRIPTS_NAME}
+QA_SCRIPTS_PATTERN=${QA_SCRIPTS_PATH}/${QA_SCRIPTS_NAME}_*${QA_SCRIPTS_SUFFIX}
+
+
+# MAIN PROCESS
+###################################################################################################
+
+# -------------------------------------------------------------------------------------------------
+# Some verbosity
+# -------------------------------------------------------------------------------------------------
+# TODO if OPTION -v show all this info, else don't
+info "Launched Semantic Model Files QA-Script on ${EXEC_TIME}"
+info "OPTIONS:"
+if [[ "${OPT_INGEST}" == "1" ]]; then
+  info "|- Run ingestion script and Reload QA tables"
+else
+  info "|- Don't run ingestion script"
+  if [[ "${OPT_RELOAD}" == "1" ]]; then
+    info "|- Reload QA tables"
+  else
+    info "|- Don't Reload QA tables"
+  fi
+fi
+if [[ "${OPT_SCRIPT_IDS}" == "" ]]; then
+  info "|- Run ALL QA scripts"
+else
+  info "|- Run only these QA scripts: { ${OPT_SCRIPT_IDS//[ ]/, } }"
+fi
+info "ARGUMENTS:"
+info "|- Semantic Model Version of file to be checked: '${MS_VERSION}' (MSv${MS_VERSION})"
+info "|- Country Code of file to be checked: '${OB_2M}'"
+info "|- Interface of file to be checked: '${INTERFACE}'."
+if [[ "${MONTH}" == "" ]]; then
+  info "|- Date of file to be checked not received. Default date will be used (previous month '${CONTENT_DATE}')"
+else
+  info "|- Date of file to be checked: '${CONTENT_DATE}'"
+fi
+
+# -------------------------------------------------------------------------------------------------
+# Ingest file
+# -------------------------------------------------------------------------------------------------
+if [[ "${OPT_INGEST}" == "1" ]]; then
+  info "Running file ingestion..."
+  
+  ${INGESTION_SCRIPT} ${MS_VERSION} ${OB_2M} ${INTERFACE} ${CONTENT_DATE} ${LOCATION_OF_RAW_FILES}
+  
+  exitCode=$?
+  if [[ "${exitCode}" != "0" ]]; then
+    die 2 "File ingestion failed with exit code ${exitCode}"
+  else
+    # workaround to the lack of return code of ingest-files script
+    ingestionLog=`ls -rt ${LOCATION_OF_RAW_FILES}/${OB_3M}/GPLATFORM/MSv${MS_VERSION}/TEMP/log-ingest-files-*_*.log | tail -1`
+    exitCode=`grep '#ERROR' ${ingestionLog} | wc -l`
+    if [[ "${exitCode}" != "0" ]]; then
+      die 2 "`grep '#ERROR' ${ingestionLog} | head -1 | gawk '{ $1=""; $2=""; $3=""; print $0 }' | sed 's/^[ ]*//g'`"
+    fi
+  fi
+  info "Finished file ingestion"
+else
+  info "Skipping file ingestion"
+fi
+
+# -------------------------------------------------------------------------------------------------
+# Load temporary table
+# -------------------------------------------------------------------------------------------------
+if [[ "${OPT_INGEST}" == "1" || "${OPT_RELOAD}" == "1" ]]; then
+  info "Running LOAD temporary QA table partitions..."
+  
+  hive --hivevar op=${OP_ID}                                 \
+       --hivevar op3m=${OB_3m}                               \
+       --hivevar month="${CONTENT_YEAR}-${CONTENT_MONTH}-01" \
+       --hivevar version=${MS_VERSION}                       \
+        -f ${LOAD_SCRIPT}
+  
+  exitCode=$?
+  if [[ "${exitCode}" != "0" ]]; then
+    die 3 "QA Temporary Tables creation failed with exit code ${exitCode}"
+  fi
+  info "Finished LOAD temporary QA table partitions"
+else
+  info "Skipping temporary tables reload"
+fi
+
+# -------------------------------------------------------------------------------------------------
+# Run QA scripts
+# -------------------------------------------------------------------------------------------------
+info "Running selected QA scripts for ${INTERFACE} interface..."
+
+existingScripts=`ls ${QA_SCRIPTS_PATTERN} 2> /dev/null`
+nExistingScripts=`echo ${existingScripts} | wc -w`
+
+if [[ nExistingScripts -gt 0 ]]; then
+  if [[ "${OPT_SCRIPT_IDS}" == "" ]]; then
+    nRequestedScripts=${nExistingScripts}
+    foundScripts=${existingScripts}
+  else
+    nRequestedScripts=`echo ${OPT_SCRIPT_IDS//[,]/ } | wc -w`
+    requestedPattern=${OPT_SCRIPT_IDS//[ ]/,}
+    if [[ nRequestedScripts -gt 1 ]]; then
+      requestedPattern="{"${requestedPattern}"}"
+    fi
+    foundScripts=`echo "ls ${QA_SCRIPTS_PATH}/${QA_SCRIPTS_NAME}_${requestedPattern}${QA_SCRIPTS_SUFFIX}" | sh`
+  fi
+  nFoundScripts=`echo ${foundScripts} | wc -w`
+  nNotFoundScripts=$((nRequestedScripts-nFoundScripts))
+  if [[ "${nFoundScripts}" == "0" ]]; then
+    error "None of the ${nRequestedScripts} requested script-ids was found for ${INTERFACE} in ${QA_SCRIPTS_PATH}, but there are some (${nExistingScripts}). Please, check script call."
+  else
+    if [[ ${nNotFoundScripts} -gt 0 ]]; then
+      warn "Some requested script-id(s) could not be found. Please, check script call and ${QA_SCRIPTS_PATH} directory."
+    fi
+    info "Found ${nFoundScripts}/${nRequestedScripts} QA scripts in ${QA_SCRIPTS_PATH}. Proceeding to execute"
+    for curScript in ${foundScripts}; do
+      
+      hive --hivevar op=${OP_ID}                                 \
+           --hivevar month="${CONTENT_YEAR}-${CONTENT_MONTH}-01" \
+            -f ${curScript}
+      
+      exitCode=$?
+      if [[ "${exitCode}" != "0" ]]; then
+        error "${curScript} failed with exit code ${exitCode}"
+      fi
+    done
+  fi
+else
+  die 4 "No script found for ${INTERFACE} in ${QA_SCRIPTS_PATH}"
+fi
+info "Finished selected QA scripts for ${INTERFACE} interface"
+
+# -------------------------------------------------------------------------------------------------
+# TODO if OPTION --notify='@miqui' -> Notify @miqui
+info "Finished process. SUCCESS!"

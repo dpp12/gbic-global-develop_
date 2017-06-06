@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+108,1,dim_postal,"","Asociada por POSTAL_ID con M_LINES y F_LINES",gbic_global_dim_postal

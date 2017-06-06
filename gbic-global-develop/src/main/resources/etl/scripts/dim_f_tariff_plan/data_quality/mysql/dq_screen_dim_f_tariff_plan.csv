@@ -1,0 +1,5 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+10301,103,1,l,NULL,"# Registros"
+10302,103,2,l,NULL,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, TARIFF_PLAN_ID)"
+10303,103,1,g,null_fields,"# Registros con algun valor NULL"
+10304,103,2,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, TARIFF_PLAN_ID)"

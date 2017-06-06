@@ -1,0 +1,2 @@
+id_fileentity,id_project,file_name,file_pattern,file_desc,file_table
+103,1,dim_f_tariff_plan,"","Asociado con F_LINES por 3 campos: VOICE_TARIFF_PLAN_ID, BBAND_TARIFF_PLAN_ID y TV_TARIFF_PLAN_ID",gbic_global_dim_f_tariff_plan

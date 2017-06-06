@@ -1,0 +1,4 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+10901,109,1,g,null_fields,"# Registros con algun valor NULL"
+10902,109,2,g,join_customers,"# Registros de F_ACCES con CUSTOMER_ID not in CUSTOMER"
+10903,109,3,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, CUSTOMER_ID, SEGMENT_CD, SERVICE_CD, TECHNOLOGY_TYPE)"

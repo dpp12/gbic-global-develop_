@@ -1,0 +1,12 @@
+id_test,id_fileentity,test_type,test_number_file,test_desc,test_field,test_field_content,test_expected_value,error_threshold,warn_threshold
+11501,115,L,1,"Validación de tests locales",NULL,NULL,NULL,0,0
+11502,115,G,2,"Validación de registros sin valores nulos",null_fields,ko,0,2,0
+11503,115,G,3,"Validación de que subscription_id venga anonimizado",subscription_id_length,"1:2,2:44,3:44,5:2,201:32,9:44,8:44",0,0,0
+11504,115,G,4,"Validación de que segment_cd cruce con segments",join_segments,ko,0,2,0
+11505,115,G,5,"Validación de que postal_cd cruce con dim_postal",join_dim_postal,ko,0,2,0
+11506,115,G,6,"Validación de total_rv != (no_top_up_rv + top_up_cost_rv)",count_revenues,ko,0,2,0
+11507,115,G,7,"Validación de que tariff_plan_id cruce con dim_m_tariff_plan",join_dim_m_tariff_plan,ko,0,2,0
+11508,115,G,8,"Validación de que customer_id cruce con customer",join_customer,ko,0,2,0
+11509,115,G,9,"Validación de que la primary key es unica",count_pk,ko,0,1,0
+11510,115,G,10,"Validación de que msisdn_id venga anonimizado",msisdn_id_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0
+11511,115,G,11,"Validación de que imsi_id venga anonimizado",imsi_id_length,"1:44,2:44,3:44,5:44,201:32,9:44,8:44",0,0,0

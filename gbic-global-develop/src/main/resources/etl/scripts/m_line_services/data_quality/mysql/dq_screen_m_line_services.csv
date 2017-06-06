@@ -1,0 +1,12 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+12501,125,1,l,NULL,"# Registros"
+12502,125,2,l,NULL,"# Duplicados en PK (gbic_op_id, month, subscription_id, msisdn_id, id_service, service_activ_dt)"
+12503,125,1,g,null_fields,"# Registros con algun valor NULL"
+12504,125,2,g,msisdn_id_length,"# Registros por longitud de msisdn_id"
+12505,125,3,g,subscription_id_length,"# Registros por longitud de subscription_id"
+12506,125,4,g,service_active_dt_format,"# Registros con campo SERVICE_ACTIV_DT sin formato de fecha"
+12507,125,5,g,activation_dt_format,"# Registros con campo ACTIVATION_DT sin formato de fecha"
+12508,125,6,g,join_dim_m_services,"# Registros de M_LINE_SERVICES con ID_SERVICE not in DIM_M_SERVICES"
+12509,125,7,g,join_dim_m_group_sva,"# Registros de M_LINE_SERVICES con GROUP_SVA not in DIM_M_GROUP_SVA"
+12510,125,8,g,join_m_lines,"# Registros de M_LINE_SERVICES con SUBSCRIPTION_ID not in M_LINES"
+12511,125,9,g,count_pk,"# Duplicados en PK (COUNTRY_ID, MONTH_ID, SUBSCRIPTION_ID, MSISDN_ID, ID_SERVICE, SERVICE_ACTIV_DATE)"

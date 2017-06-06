@@ -1,0 +1,8 @@
+id_screen,id_fileentity,screen_number,screen_type,screen_field,screen_desc
+11901,119,1,l,NULL,"# Registros"
+11902,119,2,l,NULL,"# Duplicados en PK (GBIC_OP_ID, MONTH, BILLING_CYCLE_ID, SUBSCRIPTION_ID, MSISDN_ID, DAY_CD, TIME_RANGE_CD, IMEI_NUM, BILLING_CYCLE_DT)"
+11903,119,1,g,null_fields,"# Registros con algun valor NULL"
+11904,119,2,g,msisdn_id_length,"# Registros por longitud de msisdn_id"
+11905,119,3,g,join_dim_billing_cycle,"# Registros de TRAFFIC_SMS con BILLING_CYCLE_ID not in DIM_M_BILLING_CYCLE"
+11906,119,4,g,count_pk,"# Duplicados en PK (BILLING_CYCLE_ID, SUBSCRIPTION_ID, MSISDN_ID, DAY_CD, TIME_RANGE_CD, IMEI_NUM, BILLING_CYCLE_DT)"
+11907,119,5,g,join_m_lines,"# Registros de TRAFFIC_SMS con MSISDN_ID not in M_LINES"

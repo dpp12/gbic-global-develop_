@@ -1,0 +1,29 @@
+###################################################################################################
+# COMMON deployment
+###################################################################################################
+- name: Create COMMON dir
+  file:
+    path="{{ remote.service }}/common"
+    state=directory
+    mode=0770
+
+- name: Deploy COMMON scripts
+  template:
+    src={{ item }}
+    dest={{ remote.service }}/common
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/common/*.sh"
+
+- name: Deploy COMMON datasets list
+  template:
+    src="{{ local.resources }}/common/dataset-list.txt"
+    dest="{{ remote.service }}/common"
+    mode=0660
+
+- name: Clean up COMMON files from HDFS
+  shell: hdfs dfs -rm -f -r {{ cluster.service }}/common
+  ignore_errors: yes
+
+- name: Put COMMON files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/common {{ cluster.service }}

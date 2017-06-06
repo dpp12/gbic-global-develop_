@@ -1,0 +1,530 @@
+<workflow-app xmlns='uri:oozie:workflow:0.5' name='{{ project.prefix }}gbic-${area}-${service}-export-${ob}'>
+    <global>
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+        <configuration>
+            <property>
+                <name>mapred.job.queue.name</name>
+                <value>${queueName}</value>
+            </property>
+            <property>
+                <name>oozie.use.system.libpath</name>
+                <value>true</value>
+            </property>
+            
+        </configuration>
+    </global>
+    
+{% if hadoop.cluster.krbenabled %}
+{%     set creds=' cred="gbic-cred"' %}
+    <credentials>
+          <credential name="gbic-cred" type="hcat">
+            <property>
+               <name>hcat.metastore.uri</name>
+               <value>${hive_thrift}</value>
+            </property>
+            <property>
+               <name>hcat.metastore.principal</name>
+               <value>${hive_krbprincipal}</value>
+            </property>
+         </credential>
+    </credentials>
+    
+{% else %}
+{%     set creds="" %}
+{% endif %}
+    <start to="dimensionsFork" />
+    
+    <fork name="dimensionsFork">
+        <path start="decision_dims_customers" />
+        <path start="decision_dims_f_tariffs" />
+        <path start="decision_dims_geo_zones" />
+        <path start="decision_dims_tacs" />
+        <path start="decision_dims_m_tariffs" />
+    </fork>
+    <join name="dimensionsJoin" to="kpisFork" />
+    
+    <fork name="kpisFork">
+        <path start="decision_kpis_mobile"/>
+        <path start="decision_kpis_fix"/>
+    </fork>
+    <join name="kpisJoin" to="end" />
+    
+    <!-- DIMS_CUSTOMERS -->
+    <decision name="decision_dims_customers">
+        <switch>
+            <case to="calculate_dims_customers">
+              ${wf:conf('dims_customers')==1}
+            </case>
+            <default to="dimensionsJoin"/>
+        </switch>
+    </decision>
+    
+    <action name="calculate_dims_customers"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>{{ cluster.service }}/export/oozie/lib/hive-oozie-site.xml</job-xml>
+            <script>{{ cluster.service }}/export/scripts/${version}/dims_customers.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>area=${area}</param>
+            <param>targetOb=${gbic_op_id}</param>
+            <param>version=${version}</param>
+        </hive>
+        <ok to="exportDimsCustomersFork" />
+        <error to="fail" />
+    </action>
+    
+    <fork name="exportDimsCustomersFork">
+        <path start="export_dims_customers" />
+        <path start="export_dims_customers_history" />
+    </fork>
+    <join name="exportDimsCustomersJoin" to="dimensionsJoin" />
+    
+    <action name='export_dims_customers'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_customers</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,gbic_customer_id</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_customers/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsCustomersJoin" />
+        <error to="fail" />
+    </action>
+    
+    <action name='export_dims_customers_history'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_customers_history</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,gbic_customer_id,date_ini</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_customers_history/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsCustomersJoin" />
+        <error to="fail" />
+    </action>
+    
+    <!-- DIMS_F_TARIFFS -->
+    <decision name="decision_dims_f_tariffs">
+        <switch>
+            <case to="calculate_dims_f_tariffs">
+              ${wf:conf('dims_f_tariffs')==1}
+            </case>
+            <default to="dimensionsJoin"/>
+        </switch>
+    </decision>
+
+    <action name="calculate_dims_f_tariffs"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>{{ cluster.service }}/export/oozie/lib/hive-oozie-site.xml</job-xml>
+            <script>{{ cluster.service }}/export/scripts/${version}/dims_f_tariffs.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>area=${area}</param>
+            <param>targetOb=${gbic_op_id}</param>
+            <param>version=${version}</param>
+        </hive>
+        <ok to="exportDimsFTariffsFork" />
+        <error to="fail" />
+    </action>
+    
+    <fork name="exportDimsFTariffsFork">
+        <path start="export_dims_f_tariffs" />
+        <path start="export_dims_f_tariffs_history" />
+    </fork>
+    <join name="exportDimsFTariffsJoin" to="dimensionsJoin" />
+    
+    <action name='export_dims_f_tariffs'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_m_tariffs</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,gbic_tariff_id</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_f_tariffs/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsFTariffsJoin" />
+        <error to="fail" />
+    </action>
+    
+    <action name='export_dims_f_tariffs_history'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_f_tariffs_history</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,gbic_tariff_id,date_ini</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_f_tariffs_history/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsFTariffsJoin" />
+        <error to="fail" />
+    </action>
+    
+    <!-- DIMS_GEO_ZONES -->
+    <decision name="decision_dims_geo_zones">
+        <switch>
+            <case to="calculate_dims_geo_zones">
+              ${wf:conf('dims_geo_zones')==1}
+            </case>
+            <default to="dimensionsJoin"/>
+        </switch>
+    </decision>
+    
+    <action name="calculate_dims_geo_zones"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>{{ cluster.service }}/export/oozie/lib/hive-oozie-site.xml</job-xml>
+            <script>{{ cluster.service }}/export/scripts/${version}/dims_geo_zones.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>area=${area}</param>
+            <param>targetOb=${gbic_op_id}</param>
+            <param>version=${version}</param>
+        </hive>
+        <ok to="export_dims_geo_zones" />
+        <error to="fail" />
+    </action>
+    
+    <action name='export_dims_geo_zones'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_geo_zones</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,gbic_geo_zone_id</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_geo_zones/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="dimensionsJoin" />
+        <error to="fail" />
+    </action>
+    
+    <!-- DIMS_M_TARIFFS -->
+    <decision name="decision_dims_m_tariffs">
+        <switch>
+            <case to="calculate_dims_m_tariffs">
+              ${wf:conf('dims_m_tariffs')==1}
+            </case>
+            <default to="dimensionsJoin"/>
+        </switch>
+    </decision>
+    
+    <action name="calculate_dims_m_tariffs"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>{{ cluster.service }}/export/oozie/lib/hive-oozie-site.xml</job-xml>
+            <script>{{ cluster.service }}/export/scripts/${version}/dims_m_tariffs.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>area=${area}</param>
+            <param>targetOb=${gbic_op_id}</param>
+            <param>version=${version}</param>
+        </hive>
+        <ok to="exportDimsMTariffsFork" />
+        <error to="fail" />
+    </action>
+    
+    <fork name="exportDimsMTariffsFork">
+        <path start="export_dims_m_tariffs" />
+        <path start="export_dims_m_tariffs_history" />
+    </fork>
+    <join name="exportDimsMTariffsJoin" to="dimensionsJoin" />
+    
+    <action name='export_dims_m_tariffs'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_m_tariffs</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,gbic_tariff_id</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_m_tariffs/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsMTariffsJoin" />
+        <error to="fail" />
+    </action>
+    
+    <action name='export_dims_m_tariffs_history'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_m_tariffs_history</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,gbic_tariff_id,date_ini</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_m_tariffs_history/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsMTariffsJoin" />
+        <error to="fail" />
+    </action>
+    
+    <!-- DIMS_TACS -->
+    <decision name="decision_dims_tacs">
+        <switch>
+            <case to="calculate_dims_tacs">
+              ${wf:conf('dims_tacs')==1}
+            </case>
+            <default to="dimensionsJoin"/>
+        </switch>
+    </decision>
+    
+    <action name="calculate_dims_tacs"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>{{ cluster.service }}/export/oozie/lib/hive-oozie-site.xml</job-xml>
+            <script>{{ cluster.service }}/export/scripts/${version}/dims_tacs.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>area=${area}</param>
+            <param>targetOb=${gbic_op_id}</param>
+            <param>version=${version}</param>
+        </hive>
+        <ok to="exportDimsTacsFork" />
+        <error to="fail" />
+    </action>
+    
+    <fork name="exportDimsTacsFork">
+        <path start="export_dims_tacs" />
+        <path start="export_dims_tacs_history" />
+    </fork>
+    <join name="exportDimsTacsJoin" to="dimensionsJoin" />
+    
+    <action name='export_dims_tacs'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_tacs</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>device_id</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_tacs/month_pt=${nominalTime}</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsTacsJoin" />
+        <error to="fail" />
+    </action>
+    
+    <action name='export_dims_tacs_history'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_dims_tacs_history</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>device_id,date_ini</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/dims_tacs_history/month_pt=${nominalTime}/h*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="exportDimsTacsJoin" />
+        <error to="fail" />
+    </action>
+    
+    <!-- KPIS_MOBILE -->
+    <decision name="decision_kpis_mobile">
+        <switch>
+            <case to="calculate_kpis_mobile">
+              ${wf:conf('kpis_mobile')==1}
+            </case>
+            <default to="kpisJoin"/>
+        </switch>
+    </decision>
+    
+    <action name="calculate_kpis_mobile"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>{{ cluster.service }}/export/oozie/lib/hive-oozie-site.xml</job-xml>
+            <script>{{ cluster.service }}/export/scripts/${version}/kpis_mobile.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>area=${area}</param>
+            <param>targetOb=${gbic_op_id}</param>
+            <param>version=${version}</param>
+        </hive>
+        <ok to="export_kpis_mobile" />
+        <error to="fail" />
+    </action>
+    
+    <action name='export_kpis_mobile'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_kpis_mobile</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg> 
+            <arg>gbic_op_id,seg_global_id,pre_post_id,gbic_customer_id,device_id,tariff_plan_id,gbic_geo_zone_id,months_old,prod_type_cd,bta_ind,multisim_ind,month</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/kpis_mobile/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/seg_global_id_pt=*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="kpisJoin" />
+        <error to="fail" />
+    </action>
+    
+    <!-- KPIS_FIX -->
+    <decision name="decision_kpis_fix">
+        <switch>
+            <case to="calculate_kpis_fix">
+              ${wf:conf('kpis_fix')==1}
+            </case>
+            <default to="kpisJoin"/>
+        </switch>
+    </decision>
+     
+    <action name="calculate_kpis_fix"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>{{ cluster.service }}/export/oozie/lib/hive-oozie-site.xml</job-xml>
+            <script>{{ cluster.service }}/export/scripts/${version}/kpis_fix.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>area=${area}</param>
+            <param>targetOb=${gbic_op_id}</param>
+            <param>version=${version}</param>
+        </hive>
+        <ok to="export_kpis_fix" />
+        <error to="fail" />
+    </action>
+    
+    <action name='export_kpis_fix'>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <arg>export</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>gbic_global_kpis_fix</arg>
+            <arg>--update-mode</arg>
+            <arg>allowinsert</arg>
+            <arg>--update-key</arg>
+            <arg>gbic_op_id,seg_global_id,gbic_customer_id,bband_ind,gbic_tariff_id,gbic_geo_zone_id,months_old,bband_type_cd,speed_band_qt,month</arg>
+            <arg>--export-dir</arg>
+            <arg>/apps/hive/warehouse/{{ project.prefix }}gbic_global_bnss.db/kpis_fix/gbic_op_id_pt=${gbic_op_id}/month_pt=${nominalTime}/seg_global_id_pt=*</arg>
+            <arg>--input-fields-terminated-by</arg>
+            <arg>\001</arg>
+        </sqoop>
+        <ok to="kpisJoin" />
+        <error to="fail" />
+    </action>
+    
+    <kill name="fail">
+        <message>Map/Reduce failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end' />
+</workflow-app>

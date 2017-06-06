@@ -1,0 +1,323 @@
+<workflow-app xmlns='uri:oozie:workflow:0.5' name='{{ project.prefix }}gbic-${area}-${service}-etl-${ob3}-swf-${fileName}'>
+    <global>
+        <job-tracker>${jobTracker}</job-tracker>
+        <name-node>${nameNode}</name-node>
+    </global>
+    
+{% if hadoop.cluster.krbenabled %}
+{%     set creds=' cred="gbic-cred"' %}
+    <credentials>
+        <credential name="gbic-cred" type="hcat">
+            <property>
+                <name>hcat.metastore.uri</name>
+                <value>${hive_thrift}</value>
+            </property>
+            <property>
+                <name>hcat.metastore.principal</name>
+                <value>${hive_krbprincipal}</value>
+            </property>
+        </credential>
+    </credentials>
+    
+{% else %}
+{%     set creds="" %}
+{% endif %}
+    <start to="decision_processing" />
+    
+    <decision name="decision_processing">
+        <switch>
+            <case to="decision_skip_dq">
+              ${wf:conf(fileName)==1}
+            </case>
+            <default to="end"/>
+        </switch>
+    </decision>
+    
+    <decision name="decision_skip_dq">
+        <switch>
+            <case to="get_dq_ids">
+              ${wf:conf('skip_dq')==0}
+            </case>
+            <default to="decision_etl"/>
+        </switch>
+    </decision>
+    
+    <action name="get_dq_ids"{{ creds }}>
+        <java>
+            <main-class>com.telefonica.gbic.global.DataQualityTool</main-class>
+            <arg>${area}-${service}</arg>
+            <arg>${fileName}</arg>
+            <arg>${nominalTime}</arg>
+            <arg>${gbic_op_id}</arg>
+            <arg>${fs:dirSize(gbic:getDataDirPath('{{ hdfs.inbox }}', ob3, version, gbic:toUpperCase(fileName), 'month', nominalTime))}</arg>
+            <arg>${gbic:getFileChecksum('{{ hdfs.inbox }}', ob3, version, gbic:toUpperCase(fileName), 'month', nominalTime)}</arg>
+            <arg>${mysql_url}</arg>
+            <arg>${mysql_user}</arg>
+            <arg>${mysql_pass}</arg>
+            <capture-output />
+        </java>
+            <ok to="get_file_tests"/> 
+             <error to="fail"/> 
+   </action>
+   
+   <action name="get_file_tests"{{ creds }}>
+        <sqoop xmlns="uri:oozie:sqoop-action:0.2">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+               <delete path="{{ hdfs.filetests }}/${ob3}/${fileName}/day=${nominalTime}"/>
+            </prepare>
+            <arg>import</arg>
+            <arg>--username</arg>
+            <arg>${mysql_user}</arg>
+            <arg>--password</arg>
+            <arg>${mysql_pass}</arg>
+            <arg>--connect</arg>
+            <arg>${mysql_url}</arg>
+            <arg>--table</arg>
+            <arg>file_revision_test</arg>
+            <arg>--where</arg>
+            <arg>id_filerevision=${wf:actionData("get_dq_ids")["fileRevisionId"]} AND id_fileentity=${wf:actionData("get_dq_ids")["fileEntityId"]} AND id_test > 0</arg>
+            <arg>-m</arg>
+            <arg>1</arg>
+            <arg>--target-dir</arg>   
+            <arg>{{ hdfs.filetests }}/${ob3}/${fileName}/day=${nominalTime}</arg>
+            <arg>--fields-terminated-by</arg>
+            <arg>|</arg>
+        </sqoop>
+        <ok to="hive_dq_setup" />
+        <error to="fail" />
+    </action>
+    
+    <action name="hive_dq_setup"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>${config_path}/hive-site.xml</job-xml>
+            <script>${scripts_path}/${version}/${fileName}/data_quality/${fileName}HiveDQSetup.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>ob=${ob3}</param>
+            <param>gbic_op_id=${gbic_op_id}</param>
+            <param>fileName=${fileName}</param>
+            <param>version=${version}</param>
+            <param>upperFileName=${gbic:toUpperCase(fileName)}</param>
+        </hive>
+        <ok to="decision_skip_local" />
+        <error to="fail" />
+    </action>
+    
+    <decision name="decision_skip_local">
+        <switch>
+            <case to="run_local_screens">
+              ${wf:conf('skip_local')==0}
+            </case>
+            <default to="decision_skip_global"/>
+        </switch>
+    </decision>
+    
+    <action name="run_local_screens">
+        <sub-workflow>
+            <app-path>${workflow_path}/screens.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>counter</name>
+                    <value>1</value>
+                </property>
+                <property>
+                    <name>screenType</name>
+                    <value>l</value>
+                </property>
+                <property>
+                    <name>execution</name>
+                    <value>pre</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="run_local_tests"/>
+        <error to="fail" />
+    </action>
+    
+    <action name="run_local_tests">
+        <sub-workflow>
+            <app-path>${workflow_path}/tests.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>counter</name>
+                    <value>1</value>
+                </property>
+                <property>
+                    <name>testType</name>
+                    <value>l</value>
+                </property>
+                <property>
+                    <name>execution</name>
+                    <value>pre</value>
+                </property>
+                <property>
+                    <name>id_filerevision</name>
+                    <value>${wf:actionData("get_dq_ids")["fileRevisionId"]}</value>
+                </property>
+                <property>
+                    <name>id_fileentity</name>
+                    <value>${wf:actionData("get_dq_ids")["fileEntityId"]}</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="decision_skip_global"/>
+        <error to="fail" />
+    </action>
+    
+    <decision name="decision_skip_global">
+        <switch>
+            <case to="run_global_screens">
+              ${wf:conf('skip_global')==0}
+            </case>
+            <default to="hive_dq_teardown"/>
+        </switch>
+    </decision>
+    
+    <action name="run_global_screens">
+        <sub-workflow>
+            <app-path>${workflow_path}/screens.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>counter</name>
+                    <value>1</value>
+                </property>
+                <property>
+                    <name>screenType</name>
+                    <value>g</value>
+                </property>
+                <property>
+                    <name>execution</name>
+                    <value>pre</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="run_global_tests"/>
+        <error to="fail" />
+    </action>
+    
+    <action name="run_global_tests">
+        <sub-workflow>
+            <app-path>${workflow_path}/tests.xml</app-path>
+            <propagate-configuration/>
+            <configuration>
+                <property>
+                    <name>counter</name>
+                    <value>2</value>
+                </property>
+                <property>
+                    <name>testType</name>
+                    <value>g</value>
+                </property>
+                <property>
+                    <name>execution</name>
+                    <value>pre</value>
+                </property>
+                <property>
+                    <name>id_filerevision</name>
+                    <value>${wf:actionData("get_dq_ids")["fileRevisionId"]}</value>
+                </property>
+                <property>
+                    <name>id_fileentity</name>
+                    <value>${wf:actionData("get_dq_ids")["fileEntityId"]}</value>
+                </property>
+            </configuration>
+        </sub-workflow>
+        <ok to="hive_dq_teardown"/>
+        <error to="fail" />
+    </action>
+    
+    <!-- Remove aux tables and files: hive_dq_teardown -->
+    <action name="hive_dq_teardown"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>${config_path}/hive-site.xml</job-xml>
+            <script>${scripts_path}/${version}/${fileName}/data_quality/${fileName}HiveDQTeardown.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>ob=${ob3}</param>
+            <param>gbic_op_id=${gbic_op_id}</param>
+            <param>fileName=${fileName}</param>
+            <param>upperFileName=${gbic:toUpperCase(fileName)}</param>
+        </hive>
+        <ok to="hdfs_dq_teardown" />
+        <error to="fail" />
+    </action>
+    
+    <action name="hdfs_dq_teardown"{{ creds }}>
+        <fs>
+            <delete path='{{ hdfs.filetests }}/${ob3}/${fileName}'/>
+        </fs>
+        <ok to="decision_etl"/>
+        <error to="fail"/>
+    </action>
+    
+    <decision name="decision_etl">
+        <switch>
+            <case to="hive_creation">
+                ${gbic:existsPigFile(scripts_path, version, fileName)}
+            </case>
+            <default to="end" />
+        </switch>
+    </decision>
+    
+    <action name="hive_creation"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>${config_path}/hive-site.xml</job-xml>
+            <script>${scripts_path}/${version}/${fileName}/${fileName}HiveCreation.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>ob=${ob3}</param>
+            <param>gbic_op_id=${gbic_op_id}</param>
+            <param>fileName=${fileName}</param>
+            <param>version=${version}</param>
+            <param>upperFileName=${gbic:toUpperCase(fileName)}</param>
+        </hive>
+        <ok to="etl_to_staging" />
+        <error to="fail" />
+    </action>
+    
+    <!-- ETL Data Load to Staging Area-->
+    <action name="etl_to_staging"{{ creds }}>
+        <pig>
+            <script>${scripts_path}/${version}/${fileName}/${fileName}.pig</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>ob=${ob3}</param>
+            <param>version=${version}</param>
+            <file>${config_path}/hive-site.xml#hive-site.xml</file>
+        </pig>
+        <ok to="decision_promote" />
+        <error to="fail" />
+    </action>
+    
+      <decision name="decision_promote">
+        <switch>
+            <case to="end">
+              ${wf:conf('auto_promote')==0}
+            </case>
+            <default to="promote_to_gold"/>
+        </switch>
+    </decision>
+    
+    <!-- Move data from staging to GoldZone -->
+    <action name="promote_to_gold"{{ creds }}>
+        <hive xmlns="uri:oozie:hive-action:0.5">
+            <job-xml>${config_path}/hive-site.xml</job-xml>
+            <script>${scripts_path}/${version}/${fileName}/${fileName}HivePromotion.hql</script>
+            <param>nominalTime=${nominalTime}</param>
+            <param>ob=${ob3}</param>
+            <param>gbic_op_id=${gbic_op_id}</param>
+            <param>fileName=${fileName}</param>
+            <param>upperFileName=${gbic:toUpperCase(fileName)}</param>
+        </hive>
+        <ok to="end" />
+        <error to="fail" />
+    </action>
+    
+    <kill name="fail">
+        <message>Map/Reduce failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end' />
+</workflow-app>

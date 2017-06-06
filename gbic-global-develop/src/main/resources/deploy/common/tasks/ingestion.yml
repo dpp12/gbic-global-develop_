@@ -1,0 +1,24 @@
+###################################################################################################
+# Ingest processes deployment
+###################################################################################################
+- name: Create ingestion/hive path
+  file:
+    path="{{ remote.service }}/ingestion/hive"
+    state=directory
+    mode=0770
+
+- name: Deploy ingestion file
+  template:
+    src="{{ item }}"
+    dest="{{ remote.service }}/ingestion/"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/ingestion/*.sh"
+
+- name: Deploy ingestion/hive file
+  template:
+    src="{{ item }}"
+    dest="{{ remote.service }}/ingestion/hive/"
+    mode=0660
+  with_fileglob:
+    - "{{ local.resources }}/ingestion/hive/*.hql"

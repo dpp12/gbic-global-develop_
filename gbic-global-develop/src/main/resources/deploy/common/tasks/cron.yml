@@ -1,0 +1,37 @@
+###################################################################################################
+# CRONTAB deployment
+###################################################################################################
+- name: Create monthly homogenization segments in CRONTAB
+  cron:
+    name="Standarization model downloads (monthly)"
+    minute="0"
+    hour="0"
+    day="1"
+    job="{{ remote.service }}/etl/scripts/std_dim_download.sh >> {{ remote.service }}/etl/scripts/std_dim_download.log 2>&1"
+
+- name: Pre-ingest for ESP in CRONTAB
+  cron:
+    name="Pre-ingest for ESP (monthly)"
+    minute="0"
+    hour="12"
+    day="25"
+    job="{{ remote.service }}/ingestion/pre-ingest.sh MSv{{ project.version_num }} /sftp/ESP/GPLATFORM ES >> {{ remote.service }}/ingestion/pre-ingest.log 2>&1"
+
+- name: Ingest-tacs in CRONTAB
+  cron:
+    name="Ingest-tacs (monthly)"
+    minute="00"
+    hour="01"
+    day="16"
+    job="{{ remote.service }}/ingestion/ingest-tacs.sh >> {{ remote.service }}/ingestion/ingest-tacs.log 2>&1"
+
+#Pre-requirements: Launched for the current month, the first day of every month (so one month in advance to data files)
+- name: Launch monthly pre-requirements in CRONTAB
+  cron:
+    name="Pre-requirements (monthly) for {{ item.ob }}"
+    minute="0"
+    hour="0"
+    day="1"
+    job="DATE=`date +\%Y\%m`; {{ remote.service }}/etl/prereqs/prereqs.sh -i {{ project.version_num }} {{ item.ob }} {{ item.interfaces }} ${DATE} >> {{ remote.service }}/etl/prereqs/prereqs-{{ item.ob }}.log 2>&1"
+  with_items:
+    project.generation.interfaces

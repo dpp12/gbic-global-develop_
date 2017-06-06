@@ -1,0 +1,23 @@
+###################################################################################################
+# HUE deployment
+###################################################################################################
+- name: Create HUE dir
+  file:
+    path="{{ remote.service }}/hue"
+    state=directory
+    mode=0770
+
+- name: HUE Deploy scripts
+  template:
+    src="{{ item }}"
+    dest="{{ remote.service }}/hue"
+    mode=0770
+  with_fileglob:
+    - "{{ local.resources }}/hue/*.sh"
+
+- name: Clean up HUE files from HDFS
+  shell: hdfs dfs -rm -f -r {{ cluster.service }}/hue
+  ignore_errors: yes
+
+- name: Put HUE files in HDFS
+  shell: hdfs dfs -Dfs.permissions.umask-mode={{ hdfs.umask }} -put {{ remote.service }}/hue {{ cluster.service }}
